@@ -1,30 +1,24 @@
-GeSHify Changelog
------------------
+TeXfy Changelog
+---------------
+
+This software is based on the GeSHify extension. More info on GeSHify can be
+found at http://geshify.com/
+
+[[ version numbering scheme ]]
+	Version numbers for TeXfy will be composed of the GeSHify version
+	number this TeXfy release is based on followed by a dash, the word
+	texfy and a texfy version number. Valid version numbers (in order of
+	release) would e.g. be:
+	0.3.8-texfy0
+	0.3.8.5-texfy0
+	0.3.9-texfy0
+	0.3.9-texfy1
+	0.3.9-texfy2
 
 [[ known bugs ]]
 	» none
-	Please report any bugs you encounter or your feature wish list to neverpanic@gmail.com. Thank you.
+	Please report any bugs you encounter or your feature wish list to
+	clemens@neverpanic.de. Thank you.
 
-[[ 0.3.9 :: 02.04.2009 ]]
-	» changed docs URL and LG Addon Updater URL to the new locations at the GeSHify web site
-	» added support for quoting tag arguments
-
-[[ 0.3.8 :: 30.12.2008 ]]
-	» added LG Addon Updater support
-
-[[ 0.3.7 :: 25.12.2008 ]]
-	» added support for overall_class and overall_id per request at http://expressionengine.com/forums/viewthread/70310/P18/#507509
-	» GeSHi 1.0.8.2 & GeSHi 1.1.2alpha4dev
-
-[[ 0.3.6.1 :: 05.08.2008 ]]
-	» added french translation (thanks to Fabien Amann; http://feub.net/)
-	» added german translation
-	» switched GeSHi directories to use the svn:externals property so GeSHify releases will always contain the latest and greatest GeSHi-versions
-
-[[ 0.3.6.0 :: 15.04.2008 ]]
-	» fixed bug where strict=false would still set strict to true because PHP treats string(false) as bool(true)
-	» added keyword_links={true|false|1|0} parameter and default setting in the control panel
-	» added documentation for start={number}, that was present since 0.3.something
-	» updated GeSHi 1.0 to version 1.0.7.21
-
-[[ start of changelog at version 0.3.5 ]]
+[[ 0.3.9-texfy0 :: 12.08.2009 ]]
+	» inital branch from the GeSHify project
