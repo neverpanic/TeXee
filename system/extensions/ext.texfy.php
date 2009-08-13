@@ -3,12 +3,12 @@
  * @package	TeXfy
  * @author	Clemens Lang <neverpanic@gmail.com>
  * @link	http://geshify.com/texfy/
- * @version	0.3.9-texfy0
+ * @version	##VERSION##
  * @license	GPL
  */
 class Geshify {
 	var $name = 'TeXfy';
-	var $version = '0.3.9-texfy0';
+	var $version = '##VERSION##';
 	var $description = 'Generates images from LaTeX markup in your posts.';
 	var $docs_url = 'http://geshify.com/texfy/docs';
 	var $settings = array();
