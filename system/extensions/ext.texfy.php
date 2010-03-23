@@ -13,14 +13,10 @@ class Geshify {
 	var $docs_url = 'http://geshify.com/texfy/docs';
 	var $settings = array();
 	var $settings_exist = 'y';
-	/*
-		Before I start... did I mention EllisLabs' coding guidelines for EE suck?
-		I'd rather use KNF identing and camelCase variable names
-		And what's with that uppercase keywords true, false and null? That's so 1990...
-	*/
-	// default values
 	var $llimit = '';
 	var $rlimit = '';
+
+	// default values
 	var $settings_default = array(
 		'cache_dir' => '../cache/latexfy_cache/',
 		'ldelimiter' => '[',
@@ -28,10 +24,11 @@ class Geshify {
 		'tag_name' => 'tex',
 		'cache_cutoff' => 86400,
 		'check_for_updates' => TRUE,
+		'encoding' => 'utf8'
 	);
 
 	/**
-	 * Contructor - accepts settings array
+	 * Constructor - accepts settings array
 	 * @param	array	$settings	optional		Optional associative Array with options
 	 * @return	void
 	 * @access	public
@@ -77,6 +74,7 @@ class Geshify {
 			),
 			1
 		);
+		$settings['encoding'] = 'utf8';
 		return $settings;
 	}
 
@@ -152,7 +150,6 @@ class Geshify {
 		{
 			return FALSE;
 		}
-		// stripped GeSHify updates here
 		// set the version in the DB to current
 		$DB->query("UPDATE ".$PREFS->ini('db_prefix')."_extensions SET version = '".$DB->escape_str($this->version)."' WHERE class = 'TeXfy'");
 	}
@@ -178,13 +175,14 @@ class Geshify {
 	 * @access	public
 	 * @global	$EXT			Extension-Object to support multiple calls to the same extension hook
 	 * @global	$OUT			could be used to display errors - it isn't at the moment
+	 * @global	$LANG			localization class
 	 * @todo					Display error using $OUT
 	 */
 	function pre_typography($str, $typo, $prefs)
 	{
 		// we don't need the DB, nor IN, nor DSP
 		// should probably use OUT to display user_error messages
-		global $EXT, $OUT;
+		global $EXT, $OUT, $LANG;
 		// here we're doing the actual work
 		if ($EXT->last_call !== FALSE)
 		{
@@ -261,35 +259,22 @@ class Geshify {
 		$i = 0;
 		foreach ($pos as $start_pos)
 		{
-			$error = FALSE;
 			if (($end_pos = strpos($str, $this->rlimit, $start_pos + $lllen)) !== FALSE) {
 			{
 				// we have a matching end tag.
-				// make sure cache is regenerated when changing options, too!
-				// TODO: the options thing is more of a hack than a nice solution
-				$md5 = md5(($raw_code = substr($str, $start_pos + $lllen, $end_pos - $start_pos - $lllen)).print_r($this->settings, TRUE));
+				// the cache is NOT regenerated when changing options!
+				$md5 = md5($raw_code = substr($str, $start_pos + $lllen, $end_pos - $start_pos - $lllen));
 				
 				// check whether we already have this in a cache file
 				if (is_file($cache_dir . $md5) && is_readable($cache_dir . $md5))
 				{
-					if (is_callable('file_get_contents'))
-					{
-						$latex = file_get_contents($cache_dir . $md5);
-						// this is for the garbage collection
-						touch($cache_dir . $md5);
-					}
-					else
-					{
-						// screw PHP4!
-						$f = fopen($cache_dir . $md5, 'r');
-						$latex = fread($f, filesize($cache_dir . $md5));
-						fclose($f);
-						touch($cache_dir . $md5);
-					}
+					$latex = file_get_contents($cache_dir . $md5);
+					// this is for the garbage collection
+					touch($cache_dir . $md5);
 				}
 				else
 				{
-					// no cache so do the GeSHi thing
+					// no cache -> call LatexRender
 					include_once(dirname(__FILE__) . '/latexrender/class.latexrender.php');
 
 					$latexrender = new LatexRender($cache_dir, '', $cache_dir);
@@ -302,7 +287,7 @@ class Geshify {
 					if (strpos($alt_text, "\n") !== FALSE) {
 						$alt_text = str_replace("\n", "&#10;", $alt_text);
 					}
-					if (strpos($alt_text, "\n") !== FALSE) {
+					if (strpos($alt_text, "\r") !== FALSE) {
 						$alt_text = str_replace("\r", "&#13;", $alt_text);
 					}
 
@@ -310,25 +295,14 @@ class Geshify {
 					if ($url !== FALSE) {
 						$latex = sprintf($this->settings['img_tag'], $url, $alt_text);
 					} else {
-						$latex = sprintf("[Unparsable or potentially dangerours LaTeX formula. Error %d %s]", $latex->_errorcode, $latex->_errorextra);
+						$latex = sprintf($LANG->fetch_language_file('latex_error'), $latex->_errorcode, $latex->_errorextra);
 					}
 
 					if ((!file_exists($cache_dir.$md5) && is_writable($cache_dir)) || (file_exists($cache_dir.$md5) && is_writable($cache_dir.$md5)))
 					{
 						// we can write to the cache file
-						if (is_callable('file_put_contents'))
-						{
-							file_put_contents($cache_dir.$md5, $geshified);
-							@chmod($cache_dir.$md5, 0777);
-						}
-						else
-						{
-							// when will you guys finally drop PHP4 support?
-							$f = fopen($cache_dir.$md5, 'w');
-							fwrite($f, $geshified);
-							fclose($f);
-							@chmod($cache_dir.$md5, 0777);
-						}
+						file_put_contents($cache_dir.$md5, $latex);
+						@chmod($cache_dir.$md5, 0777);
 					}
 					else
 					{
@@ -341,11 +315,8 @@ class Geshify {
 				{
 					$_SESSION['cache']['ext.texfy'] = array();
 				}
-				if (!$error)
-				{
-					$_SESSION['cache']['ext.texfy'][$md5] = $latex;
-					$str = substr_replace($str, $md5, $start_pos, $end_pos - $start_pos + $rllen);
-				}
+				$_SESSION['cache']['ext.texfy'][$md5] = $latex;
+				$str = substr_replace($str, $md5, $start_pos, $end_pos - $start_pos + $rllen);
 			}
 			// unset used variables, so we don't get messed up
 			unset($start_pos, $end_pos, $md5, $raw_code, $latex, $latexrender);
@@ -399,16 +370,7 @@ class Geshify {
 						if (strpos($str, $file) !== FALSE)
 						{
 							// $file is the marker here, and it exists in the text, so replace it
-							if (is_callable('file_get_contents'))
-							{
-								$replacement = file_get_contents($cache_dir.$file);
-							}
-							else
-							{
-								$f = fopen($cache_dir.$file, 'r');
-								$replacement = fread($cache_dir.$file, filesize($cache_dir.$file));
-								fclose($f);
-							}
+							$replacement = file_get_contents($cache_dir.$file);
 							$str = str_replace($file, $replacement, $str);
 						}
 					}
