@@ -20,5 +20,10 @@ found at http://geshify.com/
 	Please report any bugs you encounter or your feature wish list to
 	clemens@neverpanic.de. Thank you.
 
+[[ 0.3.9.1 :: 20.12.2009 ]]
+	» fixed some notices (empty() vs. != '')
+	» changes to the internal packaging process
+
 [[ 0.3.9-texfy0 :: 12.08.2009 ]]
 	» inital branch from the GeSHify project
+
