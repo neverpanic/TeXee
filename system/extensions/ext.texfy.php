@@ -376,7 +376,7 @@ class Texfy {
 					switch ($this->settings['method']) {
 						case TEXFY_METHOD_WPCOM:
 							$url = sprintf(
-								'http://s.wordpress.com/latex.php?latex=%s&bg=%s&fg=%s&size=%s',
+								'http://s.wordpress.com/latex.php?latex=%s&bg=%s&fg=%s&s=%s',
 								rawurlencode($raw_code),
 								$match['background'],
 								$match['color'],
