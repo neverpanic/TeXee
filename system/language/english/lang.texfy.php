@@ -28,13 +28,13 @@ $L = array(
 "Rendering mechanism",
 
 "method_wpcom" =>
-"wordpress.com service",
+"wordpress.com service (no installation needed)",
 
 "method_dvipng" =>
-"PNG files via local DVI",
+"PNG files via local DVI (requires local LaTeX-installation)",
 
 "method_dvips" =>
-"PS? files via local DVI",
+"PS? files via local DVI (requires local LaTeX-installation)",
 
 "default_color" =>
 "Text color when none is specified",
