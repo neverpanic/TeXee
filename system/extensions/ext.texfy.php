@@ -99,7 +99,7 @@ class Geshify {
 					)
 				)
 			)*' .
-			preg_quote($this->settings['rdelimiter'], '/') . '/ix' // "ix" are the flags
+			preg_quote($this->settings['rdelimiter'], '/') . '/ix'; // "ix" are the flags
 		$this->rlimit = $this->settings['ldelimiter'] . '/' . $this->settings['tag_name'] . $this->settings['rdelimiter'];
 	}
 
@@ -150,7 +150,7 @@ class Geshify {
 				4 => 'size_huge',
 			)
 		);
-		$settings['img_tag'] = '<img class="latex" src="%s" alt="%s" />'
+		$settings['img_tag'] = '<img class="latex" src="%s" alt="%s" />';
 		return $settings;
 	}
 
