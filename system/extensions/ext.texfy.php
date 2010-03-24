@@ -11,7 +11,7 @@ define('TEXFY_METHOD_WPCOM', 1);
 define('TEXFY_METHOD_DVIPNG', 2);
 define('TEXFY_METHOD_DVIPS', 3);
 
-class Geshify {
+class Texfy {
 	var $name = 'TeXfy';
 	var $version = '##VERSION##';
 	var $description = 'Generates images from LaTeX markup in your posts.';
@@ -432,7 +432,7 @@ class Geshify {
 	 * @param	string	$str	text that will be parsed
 	 * @param	object	$typo	Typography object
 	 * @param	array	$prefs	Preferences sent to $TYPE->parse_type
-	 * @return	string			text with the GeSHi-rendered source-code
+	 * @return	string			HTML containing the img-tag for the rendered latex
 	 * @access	public
 	 * @global	$EXT			Extension-Object to support multiple calls to the same extension hook
 	 * @global	$OUT			could be used to display errors - it isn't at the moment, though @see next line
