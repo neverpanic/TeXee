@@ -58,7 +58,7 @@ class Texfy {
 		}
 		unset($key, $val);
 		$this->llimit =
-			'/' /
+			'/' .
 			preg_quote($this->settings['ldelimiter'], '/') .
 			preg_quote($this->settings['tag_name'], '/') .
 			'(?:\s* # extended regex allow me to comment on what I do; this will be looped, making it possible to specify parameters in any order
