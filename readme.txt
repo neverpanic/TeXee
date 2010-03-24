@@ -6,3 +6,4 @@ If you're updating from a previous version of TeXfy the process is the same.
 Please report any bugs you encounter or your feature wish list to clemens@neverpanic.de.
 
 Clemens Lang
+
