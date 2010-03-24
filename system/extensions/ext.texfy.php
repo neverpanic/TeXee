@@ -378,8 +378,8 @@ class Texfy {
 							$url = sprintf(
 								'http://s.wordpress.com/latex.php?latex=%s&bg=%s&fg=%s&size=%s',
 								rawurlencode($raw_code),
-								$match['color'],
 								$match['background'],
+								$match['color'],
 								$match['size']
 							);
 							break;
