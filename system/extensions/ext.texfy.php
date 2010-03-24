@@ -132,7 +132,8 @@ class Texfy {
 				TEXFY_METHOD_WPCOM => 'method_wpcom',
 				TEXFY_METHOD_DVIPNG => 'method_dvipng',
 				TEXFY_METHOD_DVIPS => 'method_dvips'
-			)
+			),
+			TEXFY_METHOD_WPCOM
 		);
 		$settings['default_color'] = '000000';
 		$settings['default_background'] = 'transparent';
@@ -148,7 +149,8 @@ class Texfy {
 				2 => 'size_Large',
 				3 => 'size_LARGE',
 				4 => 'size_huge',
-			)
+			),
+			0
 		);
 		$settings['img_tag'] = '<img class="latex" src="%s" alt="%s" />';
 		return $settings;
