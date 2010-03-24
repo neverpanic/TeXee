@@ -362,7 +362,7 @@ class Texfy {
 			{
 				// we have a matching end tag
 				// make sure the cache is regenerated when changing options, too!
-				$md5 = md5(($raw_code = substr($str, $code_pos + strlen($match($match['match']), ($code_end_pos - $code_pos - strlen($match['match']))))) . $match['background'] . $match['color'] . $match['size'] . $this->settings['img_tag']);
+				$md5 = md5(($raw_code = substr($str, $code_pos + strlen($match['match']), ($code_end_pos - $code_pos - strlen($match['match'])))) . $match['background'] . $match['color'] . $match['size'] . $this->settings['img_tag']);
 
 				// check whether we already have this in cache
 				if (is_file($cache_dir . $md5) && is_readable($cache_dir . $md5))
