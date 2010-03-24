@@ -58,31 +58,31 @@ $L = array(
 "Auf der Webseite des Autors nach Aktualisierungen suchen",
 
 "size_tiny" =>
-"\\tiny",
+"\\\\tiny",
 
 "size_scriptsize" =>
-"\\scriptsize",
+"\\\\scriptsize",
 
 "size_footnotesize" =>
-"\\footnotesize",
+"\\\\footnotesize",
 
 "size_small" =>
-"\\small",
+"\\\\small",
 
 "size_normalsize" =>
 "normal (12pt)",
 
 "size_large" =>
-"\\large",
+"\\\\large",
 
 "size_Large" =>
-"\\Large",
+"\\\\Large",
 
 "size_LARGE" =>
-"\\LARGE",
+"\\\\LARGE",
 
 "size_huge" =>
-"\huge",
+"\\\\huge",
 
 "latex_error" =>
 "[Fehlerhafte oder potentiell gefährliche Formel. Fehler %d: %s]",

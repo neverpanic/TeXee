@@ -58,31 +58,31 @@ $L = array(
 "Check for updates at the author's web site",
 
 "size_tiny" =>
-"\\tiny",
+"\\\\tiny",
 
 "size_scriptsize" =>
-"\\scriptsize",
+"\\\\scriptsize",
 
 "size_footnotesize" =>
-"\\footnotesize",
+"\\\\footnotesize",
 
 "size_small" =>
-"\\small",
+"\\\\small",
 
 "size_normalsize" =>
 "normal (12pt)",
 
 "size_large" =>
-"\\large",
+"\\\\large",
 
 "size_Large" =>
-"\\Large",
+"\\\\Large",
 
 "size_LARGE" =>
-"\\LARGE",
+"\\\\LARGE",
 
 "size_huge" =>
-"\huge",
+"\\\\huge",
 
 "latex_error" =>
 "[Unparsable or potentially dangerous LaTeX formula. Error %1\$d: %2\$s]",
