@@ -421,10 +421,10 @@ class Texfy {
 					$_SESSION['cache']['ext.texfy'] = array();
 				}
 				$_SESSION['cache']['ext.texfy'][$md5] = $latex;
-				$str = substr_replace($str, $md5, $start_pos, $end_pos - $start_pos + $rllen);
+				$str = substr($str, 0, $code_pos) . $md5 . substr($str, $code_end_pos + $rllen);
 			}
 			// unset used variables, so we don't get messed up
-			unset($start_pos, $end_pos, $md5, $raw_code, $latex, $url);
+			unset($code_pos, $code_end_pos, $md5, $raw_code, $latex, $url, $match);
 		}
 		return $str;
 	}
