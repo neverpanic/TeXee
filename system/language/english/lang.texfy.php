@@ -33,6 +33,15 @@ $L = array(
 "check_for_updates" =>
 "Check for updates at the author's web site",
 
+"method_wpcom" =>
+"wordpress.com service",
+
+"method_dvipng" =>
+"PNG files via local DVI",
+
+"method_dvips" =>
+"PS? files via local DVI",
+
 "latex_error" =>
 "[Unparsable or potentially dangerous LaTeX formula. Error %1\$d: %2\$s]",
 //----------------------------------------

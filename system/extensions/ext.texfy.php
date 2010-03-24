@@ -6,6 +6,11 @@
  * @version	##VERSION##
  * @license	GPL
  */
+
+define('TEXFY_METHOD_WPCOM', 1);
+define('TEXFY_METHOD_DVIPNG', 2);
+define('TEXFY_METHOD_DVIPS', 3);
+
 class Geshify {
 	var $name = 'TeXfy';
 	var $version = '##VERSION##';
@@ -24,7 +29,12 @@ class Geshify {
 		'tag_name' => 'tex',
 		'cache_cutoff' => 86400,
 		'check_for_updates' => TRUE,
-		'encoding' => 'utf8'
+		'encoding' => 'utf8',
+		'method' => TEXFY_METHOD_WPCOM,
+		'default_color' => '000000',
+		'default_background' => 'transparent',
+		'default_size' => 0,
+		'img_tag' => '<img class="latex" src="%s" alt="%s" />',
 	);
 
 	/**
@@ -47,8 +57,49 @@ class Geshify {
 			}
 		}
 		unset($key, $val);
-		// GeSHify used regex to parse this, but since we only have a simple opening tag, this is not necessary
-		$this->llimit = $this->settings['ldelimiter'] . $this->settings['tag_name'] . $this->settings['rdelimiter'];
+		$this->llimit =
+			'/' /
+			preg_quote($this->settings['ldelimiter'], '/') .
+			preg_quote($this->settings['tag_name'], '/') .
+			'(?:\s* # extended regex allow me to comment on what I do; this will be looped, making it possible to specify parameters in any order
+				(?:
+					# color parameter
+					(color=
+						(?:
+							# non-quoted, single-quoted and double-quoted
+							[0-9a-f]{3} |
+							"[0-9a-f]{3}" |
+							\'[0-9a-f]{3}\' |
+							[0-9a-f]{6} |
+							"[0-9a-f]{6}" |
+							\'[0-9a-f]{6}\' |
+							transparent
+						)
+					) |
+					# background parameter
+					(background =
+						(?:
+							# non-quoted, single-quoted and double-quoted
+							[0-9a-f]{3} |
+							"[0-9a-f]{3}" |
+							\'[0-9a-f]{3}\' |
+							[0-9a-f]{6} |
+							"[0-9a-f]{6}" |
+							\'[0-9a-f]{6}\' |
+							transparent
+						)
+					) |
+					# size parameter
+					(size =
+						(?:
+							# only allow valid values
+							-?[1-4] |
+							0
+						)
+					)
+				)
+			)*' .
+			preg_quote($this->settings['rdelimiter'], '/') . '/ix' // "ix" are the flags
 		$this->rlimit = $this->settings['ldelimiter'] . '/' . $this->settings['tag_name'] . $this->settings['rdelimiter'];
 	}
 
@@ -75,6 +126,31 @@ class Geshify {
 			1
 		);
 		$settings['encoding'] = 'utf8';
+		$settings['method'] = array(
+			's',
+			array(
+				TEXFY_METHOD_WPCOM => 'method_wpcom',
+				TEXFY_METHOD_DVIPNG => 'method_dvipng',
+				TEXFY_METHOD_DVIPS => 'method_dvips'
+			)
+		);
+		$settings['default_color'] = '000000';
+		$settings['default_background'] = 'transparent';
+		$settings['default_size'] = array(
+			's',
+			array(
+				-4 => 'size_tiny',
+				-3 => 'size_scriptsize',
+				-2 => 'size_footnotesize',
+				-1 => 'size_small',
+				0 => 'size_normalsize',
+				1 => 'size_large',
+				2 => 'size_Large',
+				3 => 'size_LARGE',
+				4 => 'size_huge',
+			)
+		);
+		$settings['img_tag'] = '<img class="latex" src="%s" alt="%s" />'
 		return $settings;
 	}
 
@@ -191,6 +267,45 @@ class Geshify {
 		}
 		
 		$cache_dir = dirname(__FILE__).'/'.$this->settings['cache_dir'];
+
+		$rllen = strlen($this->rlimit);
+		$pos = array();
+		preg_match_all($this->llimit, $str, $matches, PREG_OFFSET_CAPTURE);
+		foreach ($matches[0] as $key => $match)
+		{
+			$pos[$match[1]] = array();
+			$pos[$match[1]]['match'] = $match[0];
+
+			// color
+			if (!empty($matches[1][$key][0]))
+			{
+				$pos[$match[1]]['color'] = self::sanitize_color(substr($matches[1][$key][0], 6));
+			} else {
+				$pos[$match[1]]['color'] = self::sanitize_color($this->settings['default_color']);
+			}
+
+			// background
+			if (!empty($matches[2][$key][0]))
+			{
+				$pos[$match[1]]['background'] = self::sanitize_color(substr($matches[2][$key][0], 11));
+			} else {
+				$pos[$match[1]]['background'] = self::sanitize_color($this->settings['default_background']);
+			}
+
+			// size
+			if (!empty($matches[3][$key][0]))
+			{
+				$pos[$match[1]]['size'] = self::sanitize_size(substr($matches[3][$key][0], 5));
+			} else {
+				$pos[$match[1]]['size'] = self::sanitize_size($this->settings['default_size']);
+			}
+		}
+
+		// clean variables used in the loop
+		unset($matches, $key, $match);
+
+		// krsort the array so we can use substr stuff and won't mess with future replacements
+		krsort($pos);
 		
 		// Check for the cache dir
 		if (file_exists($cache_dir) && is_dir($cache_dir))
@@ -237,35 +352,17 @@ class Geshify {
 			}
 		}
 
-		// calculate left and right delimiter lengths once
-		$lllen = strlen($this->llimit);
-		$rllen = strlen($this->rlimit);
-
-		// array to store [tex] positions
-		$pos = array();
-		$offset = 0;
-		// find all positions in $str
-		while (($pos[] = strpos($str, $this->llimit, $offset)) !== FALSE) {
-			$offset = end($pos);
-		}
-		// remove the last element in $pos; it should always be false
-		array_pop($pos);
-		unset($offset);
-		
-		// krsort the array so we can use substr stuff and won't mess future replacements
-		krsort($pos);
-		
 		// loop through the code snippets
 		$i = 0;
-		foreach ($pos as $start_pos)
+		foreach ($pos as $code_pos => $match)
 		{
-			if (($end_pos = strpos($str, $this->rlimit, $start_pos + $lllen)) !== FALSE) {
+			if (($code_end_pos = strpos($str, $this->rlimit, ((int) $code_pos + strlen($match['match'])))) !== FALSE)
 			{
-				// we have a matching end tag.
-				// the cache is NOT regenerated when changing options!
-				$md5 = md5($raw_code = substr($str, $start_pos + $lllen, $end_pos - $start_pos - $lllen));
-				
-				// check whether we already have this in a cache file
+				// we have a matching end tag
+				// make sure the cache is regenerated when changing options, too!
+				$md5 = md5(($raw_code = substr($str, $code_pos + strlen($match($match['match']), ($code_end_pos - $code_pos - strlen($match['match']))))) . $match['background'] . $match['color'] . $match['size'] . $this->settings['img_tag']);
+
+				// check whether we already have this in cache
 				if (is_file($cache_dir . $md5) && is_readable($cache_dir . $md5))
 				{
 					$latex = file_get_contents($cache_dir . $md5);
@@ -274,14 +371,24 @@ class Geshify {
 				}
 				else
 				{
-					// no cache -> call LatexRender
-					include_once(dirname(__FILE__) . '/latexrender/class.latexrender.php');
-
-					$latexrender = new LatexRender($cache_dir, '', $cache_dir);
-
-					// render latex
-					$url = $latexrender->getFormulaURL($raw_code);
-
+					switch ($this->settings['method']) {
+						case TEXFY_METHOD_WPCOM:
+							$url = sprintf(
+								'http://s.wordpress.com/latex.php?latex=%s&bg=%s&fg=%s&size=%s',
+								rawurlencode($raw_code),
+								$match['color'],
+								$match['background'],
+								$match['size']
+							);
+							break;
+						case TEXFY_METHOD_DVIPNG:
+						case TEXFY_METHOD_DVIPS:
+							die('NOT IMPLEMENTED');
+							break;
+						default:
+							die('INVALID TYPE SPECIFIED');
+							break;
+					}
 					// clean source for alt text
 					$alt_text = htmlspecialchars($raw_code, ENT_QUOTES);
 					if (strpos($alt_text, "\n") !== FALSE) {
@@ -292,17 +399,13 @@ class Geshify {
 					}
 
 					// make tag from render result
-					if ($url !== FALSE) {
-						$latex = sprintf($this->settings['img_tag'], $url, $alt_text);
-					} else {
-						$latex = sprintf($LANG->fetch_language_file('latex_error'), $latex->_errorcode, $latex->_errorextra);
-					}
+					$latex = sprintf($this->settings['img_tag'], $url, $alt_text);
 
 					if ((!file_exists($cache_dir.$md5) && is_writable($cache_dir)) || (file_exists($cache_dir.$md5) && is_writable($cache_dir.$md5)))
 					{
 						// we can write to the cache file
-						file_put_contents($cache_dir.$md5, $latex);
-						@chmod($cache_dir.$md5, 0777);
+						file_put_contents($cache_dir . $md5, $latex);
+						@chmod($cache_dir . $md5, 0777);
 					}
 					else
 					{
@@ -319,7 +422,7 @@ class Geshify {
 				$str = substr_replace($str, $md5, $start_pos, $end_pos - $start_pos + $rllen);
 			}
 			// unset used variables, so we don't get messed up
-			unset($start_pos, $end_pos, $md5, $raw_code, $latex, $latexrender);
+			unset($start_pos, $end_pos, $md5, $raw_code, $latex, $url);
 		}
 		return $str;
 	}
@@ -423,6 +526,48 @@ class Geshify {
 			$addons['TeXfy'] = $this->version;
 		}
 		return $addons;
+	}
+
+	/**
+	 * sanitizes color values used in this extension
+	 * @param	string	$color		string containing the color
+	 * @return	string				sanitized color
+	 * @access	private
+	 * @see							WordPress Plugin WP LaTeX
+	 */
+	function sanitize_color($color) {
+		if ($color == 'transparent')
+		{
+			return 'T';
+		}
+
+		// parse 3-letter hex codes
+		if (strlen($color) == 3)
+		{
+			$color = $color{0} . $color{0} . $color{1} . $color{1} . $color{2} . $color{2};
+		}
+
+		$color = substr(preg_replace('/[0-9a-f]/i', '', $color), 0, 6);
+		if (6 > $l = strlen($color))
+		{
+			$color .= str_repeat('0', 6 - $l);
+		}
+
+		return $color;
+	}
+
+	/**
+	 * sanitizes size values used in this extension
+	 * @param	string	$size		size specified by user as string
+	 * @return	int					size parsed to and and validated
+	 * @access	private
+	 */
+	function sanitize_size($size) {
+		$size = intval($size, 10);
+		if ($size < -4 || $size > 4) {
+			$size = 0;
+		}
+		return $size;
 	}
 }
 ?>
