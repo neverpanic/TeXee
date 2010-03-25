@@ -399,7 +399,7 @@ class Texfy {
 	 */
 	function post_typography($str, $typo, $prefs)
 	{
-		global $EXT;
+		global $EXT, $DB;
 		if ($EXT->last_call !== FALSE)
 		{
 			// A different extension has run before us
