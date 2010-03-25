@@ -23,7 +23,6 @@ class Texfy {
 
 	// default values
 	var $settings_default = array(
-		'cache_dir' => '../cache/latexfy_cache/',
 		'ldelimiter' => '[',
 		'rdelimiter' => ']',
 		'tag_name' => 'tex',
@@ -61,7 +60,8 @@ class Texfy {
 			'/' .
 			preg_quote($this->settings['ldelimiter'], '/') .
 			preg_quote($this->settings['tag_name'], '/') .
-			'(?:\s* # extended regex allow me to comment on what I do; this will be looped, making it possible to specify parameters in any order
+			'(?:\s* # extended regex allow me to comment on what I do; this will be looped, making it possible to
+					# specify parameters in any order
 				(?:
 					# color parameter
 					(color=
@@ -112,7 +112,6 @@ class Texfy {
 	function settings()
 	{
 		$settings = array();
-		$settings['cache_dir'] = '../cache/latexfy_cache/';
 		$settings['ldelimiter'] = '[';
 		$settings['rdelimiter'] = ']';
 		$settings['tag_name'] = 'tex';
@@ -165,7 +164,7 @@ class Texfy {
 	function activate_extension()
 	{
 		global $DB, $PREFS;
-		$DB->query($DB->insert_string($PREFS->ini('db_prefix').'_extensions',
+		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
 				'class' => 'TeXfy',
@@ -177,7 +176,7 @@ class Texfy {
 				'enabled' => 'y'
 			)
 		));
-		$DB->query($DB->insert_string($PREFS->ini('db_prefix').'_extensions',
+		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
 				'class' => 'TeXfy',
@@ -189,7 +188,7 @@ class Texfy {
 				'enabled' => 'y'
 			)
 		));
-		$DB->query($DB->insert_string($PREFS->ini('db_prefix').'_extensions',
+		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
 				'class' => 'TeXfy',
@@ -201,7 +200,7 @@ class Texfy {
 				'enabled' => 'y'
 			)
 		));
-		$DB->query($DB->insert_string($PREFS->ini('db_prefix').'_extensions',
+		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
 				'class' => 'TeXfy',
@@ -212,6 +211,12 @@ class Texfy {
 				'enabled' => 'y'
 			)
 		));
+		$DB->query('CREATE TABLE IF NOT EXISTS ' . $this->cache_table() . ' (
+				`key` int(11) NOT NULL,
+				`value` text NOT NULL,
+				`created` int(11) NOT NULL,
+				PRIMARY KEY(`key`)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8');
 	}
 
 	/**
@@ -228,8 +233,11 @@ class Texfy {
 		{
 			return FALSE;
 		}
+		// clear cache
+		$DB->query("TRUNCATE TABLE " . $this->cache_table());
 		// set the version in the DB to current
-		$DB->query("UPDATE ".$PREFS->ini('db_prefix')."_extensions SET version = '".$DB->escape_str($this->version)."' WHERE class = 'TeXfy'");
+		$DB->query("UPDATE " . $PREFS->ini('db_prefix') . "_extensions SET version = '" .
+			$DB->escape_str($this->version) . "' WHERE class = 'TeXfy'");
 	}
 
 	/**
@@ -241,7 +249,8 @@ class Texfy {
 	function disable_extension()
 	{
 		global $DB, $PREFS;
-		$DB->query("DELETE FROM ".$PREFS->ini('db_prefix')."_extensions WHERE class = 'TeXfy'");
+		$DB->query("DELETE FROM " . $PREFS->ini('db_prefix') . "_extensions WHERE class = 'TeXfy'");
+		$DB->query("DROP TABLE " . $this->cache_table());
 	}
 
 	/**
@@ -252,24 +261,20 @@ class Texfy {
 	 * @return	string			text where the code has been stripped and code positions marked with an MD5-ID
 	 * @access	public
 	 * @global	$EXT			Extension-Object to support multiple calls to the same extension hook
-	 * @global	$OUT			could be used to display errors - it isn't at the moment
+	 * @global	$DB				database object for access to the cache table
 	 * @global	$LANG			localization class
-	 * @todo					Display error using $OUT
 	 */
 	function pre_typography($str, $typo, $prefs)
 	{
-		// we don't need the DB, nor IN, nor DSP
 		// should probably use OUT to display user_error messages
-		global $EXT, $OUT, $LANG;
-		// here we're doing the actual work
+		global $EXT, $DB, $LANG;
+
+		// check whether a different extension has run before us
 		if ($EXT->last_call !== FALSE)
 		{
-			// A different extension has run before us
 			$str = $EXT->last_call;
 		}
 		
-		$cache_dir = dirname(__FILE__).'/'.$this->settings['cache_dir'];
-
 		$rllen = strlen($this->rlimit);
 		$pos = array();
 		preg_match_all($this->llimit, $str, $matches, PREG_OFFSET_CAPTURE);
@@ -309,50 +314,8 @@ class Texfy {
 		// krsort the array so we can use substr stuff and won't mess with future replacements
 		krsort($pos);
 		
-		// Check for the cache dir
-		if (file_exists($cache_dir) && is_dir($cache_dir))
-		{
-			$cache_dir = realpath($cache_dir).'/';
-			if (!is_writable($cache_dir))
-			{
-				// try to chmod it
-				@chmod($cache_dir, 0777);
-				if (!is_writable($cache_dir))
-				{
-					// still not writable? display a warning
-					print('<b>Warning</b>: Your <i>'.$this->name.'</i> cache directory <b>'.$cache_dir.'</b> is not writable! This will cause severe performance problems, so I suggest you chmod that dir.');
-				}
-			}
-		}
-		else
-		{
-			if (!mkdir($cache_dir, 0777))
-			{
-				print('<b>Warning</b>: Your <i>'.$this->name.'</i> cache directory <b>'.$cache_dir.'</b> could not be created! This will cause severe performance problems, so I suggest you create and chmod that dir.');
-			}
-			else
-			{
-				// create an index.html so the contents will not be listed.
-				@touch($cache_dir.'index.html');
-			}
-		}
-		if (mt_rand(0, 10) == 10)
-		{
-			// on every 10th visit do the garbage collection
-			$cur = time();
-			$d = dir($cache_dir);
-			while (($f = $d->read()) !== FALSE)
-			{
-				if ($f != 'index.html' && $f{0} != '.')
-				{
-					if ($cur - filemtime($cache_dir.$f) > $this->settings['cache_cutoff'])
-					{
-						// File is older than cutoff, delete it.
-						@unlink($cache_dir.$f);
-					}
-				}
-			}
-		}
+		// GC: delete elements older than cache_cutoff
+		$DB->query("DELETE FROM " . $this->cache_table() . " WHERE created < " . (time() - (int) $this->settings['cache_cutoff']));
 
 		// loop through the code snippets
 		$i = 0;
@@ -362,16 +325,12 @@ class Texfy {
 			{
 				// we have a matching end tag
 				// make sure the cache is regenerated when changing options, too!
-				$md5 = md5(($raw_code = substr($str, $code_pos + strlen($match['match']), ($code_end_pos - $code_pos - strlen($match['match'])))) . $match['background'] . $match['color'] . $match['size'] . $this->settings['img_tag']);
-
-				// check whether we already have this in cache
-				if (is_file($cache_dir . $md5) && is_readable($cache_dir . $md5))
-				{
-					$latex = file_get_contents($cache_dir . $md5);
-					// this is for the garbage collection
-					touch($cache_dir . $md5);
-				}
-				else
+				$raw_code = substr($str, $code_pos + strlen($match['match']));
+				$md5 = $this->cache_id($raw_code, $match['background'], $match['color'], $match['size'], $this->settings['img_tag']);
+				
+				// check wether we already have this one cached and generate it, if not
+				$results = $DB->query("SELECT COUNT(*) AS `count` FROM " . $this->cache_table() . " WHERE `key` = 0x" . $md5);
+				if ($results->row['count'] == 0)
 				{
 					switch ($this->settings['method']) {
 						case TEXFY_METHOD_WPCOM:
@@ -385,9 +344,11 @@ class Texfy {
 							break;
 						case TEXFY_METHOD_DVIPNG:
 						case TEXFY_METHOD_DVIPS:
+							// TODO: add error URL
 							die('NOT IMPLEMENTED');
 							break;
 						default:
+							// TODO: add error URL
 							die('INVALID TYPE SPECIFIED');
 							break;
 					}
@@ -403,42 +364,38 @@ class Texfy {
 					// make tag from render result
 					$latex = sprintf($this->settings['img_tag'], $url, $alt_text);
 
-					if ((!file_exists($cache_dir.$md5) && is_writable($cache_dir)) || (file_exists($cache_dir.$md5) && is_writable($cache_dir.$md5)))
-					{
-						// we can write to the cache file
-						file_put_contents($cache_dir . $md5, $latex);
-						@chmod($cache_dir . $md5, 0777);
-					}
-					else
-					{
-						// We could ignore that, but for performance reasons better warn the user.
-						print('<b>Warning</b>: Your <i>'.$this->name.'</i> cache directory <b>'.$cache_dir.'</b> is not writable! This will cause severe performance problems, so I suggest you chmod that dir.');
-					}
+					// save result to cache
+					$DB->query($DB->insert_string($this->cache_table(), array(
+						'key' => $md5,
+						'value' => $latex,
+						'created' => time()
+					)));
 				}
-				// save replacement to cache and mark location with an identifier for later replacement
+				
+				// remember we added this one and need to replace it back later
 				if (!isset($_SESSION['cache']['ext.texfy']))
 				{
 					$_SESSION['cache']['ext.texfy'] = array();
 				}
-				$_SESSION['cache']['ext.texfy'][$md5] = $latex;
+				$_SESSION['cache']['ext.texfy'][] = $md5;
 				$str = substr($str, 0, $code_pos) . $md5 . substr($str, $code_end_pos + $rllen);
 			}
 			// unset used variables, so we don't get messed up
-			unset($code_pos, $code_end_pos, $md5, $raw_code, $latex, $url, $match);
+			unset($code_pos, $code_end_pos, $md5, $raw_code, $latex, $url, $match, $results);
 		}
 		return $str;
 	}
 
 	/**
-	 * Function called by the post_typography extension hook to replace the MD5-IDs pre_typography put into the text with the HTML equivalent of the source code
+	 * Function called by the post_typography extension hook to replace the MD5-IDs pre_typography put into the text
+	 * with the rendered image
 	 * @param	string	$str	text that will be parsed
 	 * @param	object	$typo	Typography object
 	 * @param	array	$prefs	Preferences sent to $TYPE->parse_type
 	 * @return	string			HTML containing the img-tag for the rendered latex
 	 * @access	public
 	 * @global	$EXT			Extension-Object to support multiple calls to the same extension hook
-	 * @global	$OUT			could be used to display errors - it isn't at the moment, though @see next line
-	 * @todo					Display error using $OUT
+	 * @global	$DB				provides access to the cache
 	 */
 	function post_typography($str, $typo, $prefs)
 	{
@@ -451,36 +408,20 @@ class Texfy {
 		if (isset($_SESSION['cache']['ext.texfy']))
 		{
 			// replace idents with values from the cache - this way we passed the code around the usual typography stuff
-			foreach ($_SESSION['cache']['ext.texfy'] as $marker => $replacement)
+			foreach ($_SESSION['cache']['ext.texfy'] as $key => $md5)
 			{
-				if (strpos($str, $marker) !== FALSE)
+				if (strpos($str, $md5) !== FALSE)
 				{
 					// this marker is in the text, so replace it
-					$str = str_replace($marker, $replacement, $str);
-				}
-			}
-			return $str;
-		}
-		else
-		{
-			// load the replacements from the file
-			$d = dir($cache_dir = dirname(__FILE__).'/'.$this->settings['cache_dir']);
-			while (($file = $d->read()) !== FALSE)
-			{
-				if ($file != 'index.html' && $file{0} != '.')
-				{
-					// read file content and replace - I know this is ugly, but it seems you can't trust $_SESSION['cache']
-					if (is_readable($cache_dir.$file))
-					{
-						if (strpos($str, $file) !== FALSE)
-						{
-							// $file is the marker here, and it exists in the text, so replace it
-							$replacement = file_get_contents($cache_dir.$file);
-							$str = str_replace($file, $replacement, $str);
-						}
+					$results = $DB->query("SELECT `value` FROM " . $this->cache_table() . " WHERE `key` = 0x" . $md5);
+					if ($results->num_rows > 0) {
+						$str = str_replace($md5, $results->row['value'], $str);
+					} else {
+						// TODO: handle cache errors
 					}
+					// remove this from cache to speed up other processing
+					unset($_SESSION['cache']['ext.texfy'][$key]);
 				}
-				unset($replacement);
 			}
 			return $str;
 		}
@@ -537,7 +478,8 @@ class Texfy {
 	 * @access	private
 	 * @see							WordPress Plugin WP LaTeX
 	 */
-	function sanitize_color($color) {
+	function sanitize_color($color)
+	{
 		if ($color == 'transparent')
 		{
 			return 'T';
@@ -564,12 +506,48 @@ class Texfy {
 	 * @return	int					size parsed to and and validated
 	 * @access	private
 	 */
-	function sanitize_size($size) {
+	function sanitize_size($size)
+	{
 		$size = intval($size, 10);
-		if ($size < -4 || $size > 4) {
+		if ($size < -4 || $size > 4)
+		{
 			$size = 0;
 		}
 		return $size;
+	}
+	
+	/**
+	 * returns table name for the cache table, ready to use in a database statement
+	 * @param	void
+	 * @return	string
+	 * @access	private
+	 * @global	$DB			database object for escaping
+	 * @global	$PREFS		global preferences for the table prefix
+	 */
+	function cache_table()
+	{
+		global $PREFS, $DB;
+		return $PREFS->ini('db_prefix') . '_' . $DB->escape_str(strtolower($this->name)) . '_cache';
+	}
+	
+	/**
+	 * returns the cache ID for a specific combination of inputs
+	 * @param	string	$code			code to be parsed, background, color, size, tag
+	 * @param	string	$background		background color
+	 * @param	string	$color			text color
+	 * @param	string	$size			font size
+	 * @param	string	$tag			image-tag template
+	 * @return	string					generated cache-id
+	 */
+	function cache_id($code,&$background, $color, $size, $tag)
+	{
+		return md5(
+			$code .
+			'b' . $background .
+			'c' . $color .
+			's' . $size .
+			't' . $tag
+		);
 	}
 }
 ?>

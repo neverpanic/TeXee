@@ -5,10 +5,6 @@ $L = array(
 //----------------------------------------
 // Required for extension settings page
 //----------------------------------------
-
-"cache_dir" =>
-"Cache-Verzeichnis relativ zum Speicherort der ext.texfy.php-Datei (mit terminierendem Slash)",
-
 "ldelimiter" =>
 "Linker Begrenzer für TeXfy-Block",
 

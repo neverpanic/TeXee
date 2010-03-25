@@ -5,10 +5,6 @@ $L = array(
 //----------------------------------------
 // Required for extension settings page
 //----------------------------------------
-
-"cache_dir" =>
-"Cache directory relative to the location of your ext.texfy.php file (with trailing slash)",
-
 "ldelimiter" =>
 "Left delimiter for LaTeX code block",
 
