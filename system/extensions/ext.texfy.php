@@ -325,7 +325,7 @@ class Texfy {
 			{
 				// we have a matching end tag
 				// make sure the cache is regenerated when changing options, too!
-				$raw_code = substr($str, $code_pos + strlen($match['match']));
+				$raw_code = substr($str, $code_pos + strlen($match['match']), $code_end_pos - $code_pos - strlen($match['match']));
 				$md5 = $this->cache_id($raw_code, $match['background'], $match['color'], $match['size'], $this->settings['img_tag']);
 				
 				// check wether we already have this one cached and generate it, if not
