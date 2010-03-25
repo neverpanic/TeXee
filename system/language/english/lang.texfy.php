@@ -80,8 +80,45 @@ $L = array(
 "size_huge" =>
 "\\\\huge",
 
-"latex_error" =>
-"[Unparsable or potentially dangerous LaTeX formula. Error %1\$d: %2\$s]",
+"errmsg" =>
+"[An error occured rendering this formula: %1\$d: %2\$s]",
+
+'EINVRENDER' =>
+'invalid render method: %s',
+
+'ENOINPUT' =>
+'formula empty',
+
+'EMALICIOUS' =>
+'potentially dangerous formula',
+
+'EMATHMODE' =>
+'formula leaves inline math mode',
+
+'ETOOLONG' =>
+'formula too long',
+
+'ETMPFILE' =>
+'error creating temporary .tex file',
+
+'ETPLFILE' =>
+'error reading .tex template file',
+
+'ETEXWRITE' =>
+'error writing .tex file',
+
+'EPARSE' =>
+'error running latex: return code %d, output: %s',
+
+'ECREATODIR' =>
+'unable to create output directory %s',
+
+'EWRITODIR' =>
+'error writing output file %s',
+
+'EDVIPNG' =>
+'error running dvipng: return code %d, output %s',
+
 //----------------------------------------
 // END
 ''=>''

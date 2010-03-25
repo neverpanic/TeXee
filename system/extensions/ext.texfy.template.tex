@@ -1,0 +1,14 @@
+% possible placeholders are:
+% ENCODING for the encoding selected
+% SOURCE for the latex source code to be rendered
+% placeholders are to be specified in the form ##NAME##
+\documentclass[12pt]{article}
+\usepackage[##ENCODING##]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage[mathscr]{eucal}
+\pagestyle{empty}
+\begin{document}
+  ##SOURCE##
+\end{document}

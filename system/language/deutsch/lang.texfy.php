@@ -80,8 +80,44 @@ $L = array(
 "size_huge" =>
 "\\\\huge",
 
-"latex_error" =>
-"[Fehlerhafte oder potentiell gefährliche Formel. Fehler %d: %s]",
+"errmsg" =>
+"[Beim rendern dieser Formel ist ein Fehler aufgetreten: %d: %s]",
+
+'EINVRENDER' =>
+'ungültige Render-Methode: %s',
+
+'ENOINPUT' =>
+'leere Formel',
+
+'EMALICIOUS' =>
+'möglicherweise bösartige Formel',
+
+'EMATHMODE' =>
+'Formel verlässt den Inline-Math-Mode',
+
+'ETOOLONG' =>
+'Formel zu lang',
+
+'ETMPFILE' =>
+'Fehler beim Erstellen einer temporären Datei',
+
+'ETPLFILE' =>
+'Fehler beim Lesen der .tex-Template-Datei',
+
+'ETEXWRITE' =>
+'Fehler beim Schreiben der .tex-Datei',
+
+'EPARSE' =>
+'Fehler beim Ausführen von latex: Rückgabewert %d, Ausgabe: %s',
+
+'ECREATODIR' =>
+'Kann Ausgabeverzeichnis %s nicht erstellen',
+
+'EWRITODIR' =>
+'Fehler beim Schreiben der Ausgabe-Datei %s',
+
+'EDVIPNG' =>
+'Fehler beim Ausführen von dvipng: Rückgabewert %d, Ausgabe %s',
 //----------------------------------------
 // END
 ''=>''

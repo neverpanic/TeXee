@@ -7,9 +7,30 @@
  * @license	GPL
  */
 
+// constants
 define('TEXFY_METHOD_WPCOM', 1);
 define('TEXFY_METHOD_DVIPNG', 2);
 define('TEXFY_METHOD_DVIPS', 3);
+
+// static parameters
+define('TEXFY_TEMPLATE', dirname(__FILE__) . '/ext.texfy.template.tex');
+define('TEXFY_SOURCELIMIT', 2000);
+
+// error numbers
+define('TEXFY_EINVRENDER'	,   1);
+define('TEXFY_ENOINPUT'		, 101);
+define('TEXFY_EMALICIOUS'	, 102);
+define('TEXFY_EMATHMODE'	, 103);
+define('TEXFY_ETOOLONG'		, 104);
+define('TEXFY_ETMPFILE'		, 105);
+define('TEXFY_ETPLFILE'		, 106);
+define('TEXFY_ETEXWRITE'	, 107);
+define('TEXFY_EPARSE'		, 201);
+define('TEXFY_ECREATODIR'	, 301);
+define('TEXFY_EWRITODIR'	, 302);
+define('TEXFY_EDVIPNG'		, 304);
+
+
 
 class Texfy {
 	var $name = 'TeXfy';
@@ -20,6 +41,58 @@ class Texfy {
 	var $settings_exist = 'y';
 	var $llimit = '';
 	var $rlimit = '';
+	var $errno = 0;
+	var $errstr = '';
+	var $blacklist = array(
+		'^^',
+		'afterassignment',
+		'aftergroup',
+		'batchmode',
+		'catcode',
+		'closein',
+		'closeout',
+		'command',
+		'csname',
+		'document',
+		'def',
+		'errhelp',
+		'errcontextlines',
+		'errorstopmode',
+		'every',
+		'expandafter',
+		'immediate',
+		'include',
+		'input',
+		'jobname',
+		'loop',
+		'lowercase',
+		'makeat',
+		'meaning',
+		'message',
+		'name',
+		'newhelp',
+		'noexpand',
+		'nonstopmode',
+		'open',
+		'output',
+		'pagestyle',
+		'package',
+		'pathname',
+		'read',
+		'relax',
+		'repeat',
+		'shipout',
+		'show',
+		'scrollmode',
+		'special',
+		'syscall',
+		'toks',
+		'tracing',
+		'typeout',
+		'typein',
+		'uppercase',
+		'write'
+	);
 
 	// default values
 	var $settings_default = array(
@@ -29,11 +102,13 @@ class Texfy {
 		'cache_cutoff' => 86400,
 		'check_for_updates' => TRUE,
 		'encoding' => 'utf8',
-		'method' => TEXFY_METHOD_WPCOM,
 		'default_color' => '000000',
 		'default_background' => 'transparent',
 		'default_size' => 0,
 		'img_tag' => '<img class="latex" src="%s" alt="%s" />',
+		'method' => TEXFY_METHOD_WPCOM,
+		'latex_path' => '/usr/bin/latex',
+		'dvipng_path' => '/usr/bin/dvipng',
 	);
 
 	/**
@@ -125,15 +200,6 @@ class Texfy {
 			1
 		);
 		$settings['encoding'] = 'utf8';
-		$settings['method'] = array(
-			's',
-			array(
-				TEXFY_METHOD_WPCOM => 'method_wpcom',
-				TEXFY_METHOD_DVIPNG => 'method_dvipng',
-				TEXFY_METHOD_DVIPS => 'method_dvips'
-			),
-			TEXFY_METHOD_WPCOM
-		);
 		$settings['default_color'] = '000000';
 		$settings['default_background'] = 'transparent';
 		$settings['default_size'] = array(
@@ -152,6 +218,17 @@ class Texfy {
 			0
 		);
 		$settings['img_tag'] = '<img class="latex" src="%s" alt="%s" />';
+		$settings['method'] = array(
+			's',
+			array(
+				TEXFY_METHOD_WPCOM => 'method_wpcom',
+				TEXFY_METHOD_DVIPNG => 'method_dvipng',
+				TEXFY_METHOD_DVIPS => 'method_dvips'
+			),
+			TEXFY_METHOD_WPCOM
+		);
+		$settings['latex_path'] = '/usr/bin/latex';
+		$settings['dvipng_path'] = '/usr/bin/dvipng';
 		return $settings;
 	}
 
@@ -262,7 +339,7 @@ class Texfy {
 	 * @access	public
 	 * @global	$EXT			Extension-Object to support multiple calls to the same extension hook
 	 * @global	$DB				database object for access to the cache table
-	 * @global	$LANG			localization class
+	 * @global	$LANG			language object to localize error messages
 	 */
 	function pre_typography($str, $typo, $prefs)
 	{
@@ -333,6 +410,10 @@ class Texfy {
 				$results = $DB->query("SELECT COUNT(*) AS `count` FROM " . $this->cache_table() . " WHERE `key` = '" . $DB->escape_str($md5) . "'");
 				if ($results->row['count'] == 0)
 				{
+					// reset errno and errstr
+					$this->errno = 0;
+					$this->errstr = '';
+					
 					switch ($this->settings['method']) {
 						case TEXFY_METHOD_WPCOM:
 							$url = sprintf(
@@ -345,26 +426,53 @@ class Texfy {
 							break;
 						case TEXFY_METHOD_DVIPNG:
 						case TEXFY_METHOD_DVIPS:
-							// TODO: add error URL
-							die('NOT IMPLEMENTED');
+							$size = $this->ltx_number2size($match['size']);
+							$bgcolor = $this->ltx_hex2rgb($match['background']);
+							$fgcolor = $this->ltx_hex2rgb($match['color']);
+							
+							if ($texfile = $this->ltx_texfile($raw_code, $size))
+							{
+								if ($dvifile = $this->ltx_dvifile($texfile))
+								{
+									switch ($this->settings['method'])
+									{
+										case TEXFY_METHOD_DVIPNG:
+											$url = $this->ltx_pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
+											break;
+										case TEXFY_METHOD_DVIPS:
+											$this->errno = TEXFY_EINVRENDER;
+											$this->errstr = sprintf($LANG->fetch_language_file('EINVRENDER'), $this->settings['method']);
+											break;
+									}
+								}
+							}
+							// clean up the mess
+							$this->ltx_cleanup($texfile);
 							break;
 						default:
-							// TODO: add error URL
-							die('INVALID TYPE SPECIFIED');
+							$this->errno = TEXFY_EINVRENDER;
+							$this->errstr = sprintf($LANG->fetch_language_file('EINVRENDER'), $this->settings['method']);
 							break;
 					}
-					// clean source for alt text
-					$alt_text = htmlspecialchars($raw_code, ENT_QUOTES);
-					if (strpos($alt_text, "\n") !== FALSE) {
-						$alt_text = str_replace("\n", "&#10;", $alt_text);
+					if ($this->errno == 0)
+					{
+						// clean source for alt text
+						$alt_text = htmlspecialchars($raw_code, ENT_QUOTES);
+						if (strpos($alt_text, "\n") !== FALSE) {
+							$alt_text = str_replace("\n", "&#10;", $alt_text);
+						}
+						if (strpos($alt_text, "\r") !== FALSE) {
+							$alt_text = str_replace("\r", "&#13;", $alt_text);
+						}
+						
+						// make tag from render result
+						$latex = sprintf($this->settings['img_tag'], $url, $alt_text);
 					}
-					if (strpos($alt_text, "\r") !== FALSE) {
-						$alt_text = str_replace("\r", "&#13;", $alt_text);
+					else
+					{
+						$latex = sprintf($LANG->fetch_language_file('errmsg'), $this->errno, $this->errstr);
 					}
-
-					// make tag from render result
-					$latex = sprintf($this->settings['img_tag'], $url, $alt_text);
-
+					
 					// save result to cache
 					$DB->query(
 						"INSERT INTO " . $this->cache_table() . " (`key`, `value`, `created`) VALUES (
@@ -552,5 +660,274 @@ class Texfy {
 			't' . $tag
 		);
 	}
+	
+	/**
+	 * converts the size number used in the code to the name of the corresponding latex command
+	 * @param	int		$size			size number specified in the source
+	 * @return	string					corresponding latex command or false for no change
+	 */
+	function ltx_number2size($size)
+	{
+		switch ($size)
+		{
+			case -4:
+				return 'tiny';
+			case -3:
+				return 'scriptsize';
+			case -2:
+				return 'footnotesize';
+			case -1:
+				return 'small';
+			case 0:
+				return false;
+			case 1:
+				return 'large';
+			case 2:
+				return 'Large';
+			case 3:
+				return 'LARGE';
+			case 4:
+				return 'huge';
+			default:
+				return false;
+		}
+	}
+	
+	/**
+	 * converts a color specified in hex to an rgb color
+	 * @param	string	$color		color to be converted
+	 * @return	array				array with 3 elements: array(R, G, B) or false for no change
+	 */
+	function ltx_hex2rgb($color)
+	{
+		if ($color == 'T')
+		{
+			return false;
+		}
+		$rgb = array(
+			substr($color, 0, 2),
+			substr($color, 2, 2),
+			substr($color, 4, 2)
+		);
+		foreach ($rgb as &$col)
+		{
+			$col = number_format(hexdec($col) / 255, 3);
+		}
+		return $rgb;
+	}
+	
+	/**
+	 * creates a .tex file containing the code to be rendered
+	 * in case of error, false is returned and errno and errstr are set
+	 * @param	string	$raw_code		the code to be rendered
+	 * @param	string	$size			latex size environment name for the text size of the rendered formula
+	 * @return	string					path to the temporary file or false in case of error
+	 * @global	$LANG					language object for the error messages
+	 */
+	function ltx_texfile($raw_code, $size)
+	{
+		global $LANG;
+		$raw_code = trim($raw_code);
+		
+		// check whether we have input at all
+		if (strlen($raw_code) == 0)
+		{
+			$this->errno = TEXFY_ENOINPUT;
+			$this->errstr = $LANG->fetch_language_file('ENOINPUT');
+			return false;
+		}
+		
+		// check for potentially dangerous input
+		foreach ($this->blacklist as $bad)
+		{
+			if (strpos($raw_code, $bad) !== FALSE)
+			{
+				$this->errno = TEXFY_EMALICIOUS;
+				$this->errstr = $LANG->fetch_language_file('EMALICIOUS');
+				return false;
+			}
+		}
+		
+		// force math mode
+		if (preg_match('/(?:^|[^\\\\])\$/', $raw_code))
+		{
+			$this->errno = TEXFY_EMATHMODE;
+			$this->errstr = $LANG->fetch_language_file('EMATHMODE');
+			return false;
+		}
+		
+		// force upper limit
+		if (strlen($raw_code) > TEXFY_SOURCELIMIT)
+		{
+			$this->errno = TEXFY_ETOOLONG;
+			$this->errstr = $LANG->fetch_language_file('ETOOLONG');
+			return false;
+		}
+		
+		// try to create a temporary file
+		if (!$tmpfile = tempnam('/tmp', 'texfy_'))
+		{
+			$this->errno = TEXFY_ETMPFILE;
+			$this->errstr = $LANG->fetch_language_file('ETMPFILE');
+			return false;
+		}
+		
+		// read template
+		if (!$template = @file_get_contents(TEXFY_TEMPLATE))
+		{
+			$this->errno = TEXFY_ETPLFILE;
+			$this->errstr = $LANG->fetch_language_file('ETPLFILE');
+			return false;
+		}
+		
+		// build latex code
+		$latex = '';
+		if ($size)
+		{
+			$latex .= '\\begin{' . $size . '}';
+		}
+		
+		if (in_array($raw_code, array('\\LaTeX', '\\TeX', '\\AmS', '\\AmS-\\TeX', '\\AmS-\\LaTeX')))
+		{
+			$latex .= $raw_code;
+		}
+		else
+		{
+			$latex .= "\$\\\\[0pt]\n";
+			$latex .= $raw_code;
+			$latex .= "\$";
+		}
+		
+		if ($size)
+		{
+			$latex .= '\\end{' . $size . '}';
+		}
+		
+		// put code in template...
+		$template = str_replace($template, '##ENCODING##', $this->settings['encoding']);
+		$template = str_replace($template, '##SOURCE##', $raw_code);
+		
+		// ... and write it to the tempfile
+		if (!@file_put_contents($tmpfile, $template, LOCK_EX))
+		{
+			$this->errno = TEXFY_ETEXWRITE;
+			$this->errstr = $LANG->fetch_language_file('ETEXWRITE');
+			return false;
+		}
+		
+		// success!
+		return $tmpfile;
+	}
+
+	/**
+	 * runs latex and creates a .dvi file from the .tex file
+	 * in case of error, false is returned and errno and errstr are set
+	 * @param	string	$texfile		path to the latex file
+	 * @return	string					path to the generated dvi file or false on error
+	 * @global	$LANG					language object for the error messages
+	 */
+	function ltx_dvifile($texfile)
+	{
+		global $LANG;
+		$dir = dirname($texfile);
+		$job = basename($texfile);
+		
+		// make tex output the files to the same dir as the source file, regardless or working dir
+		putenv("TEXMFOUTPUT=" . $dir);
+		
+		// check whether this latex compiler supports --halt-on-error and --version
+		exec($this->settings['latex_path'] . ' --halt-on-error --version >/dev/null 2>&1', $latextest, $v);
+		$haltopt = $V ? '' : ' --halt-on-error';
+		
+		exec($this->settings['latex_path'] . ' --jobname foo --version </dev/null >/dev/null 2>&1', $latextest, $v);
+		$jobopt = $v ? '' : ' --jobname ' . escapeshellarg($job);
+		
+		$exec = "cd $dir && " . $this->settings['latex_path'] . $haltopt . $jobopt . ' --interaction nonstopmode ' . escapeshellarg($texfile);
+		exec($latex_exec . ' >/dev/null 2>&1', $latexout, $l);
+		if ($l != 0)
+		{
+			$this->errno = TEXFY_EPARSE;
+			$this->errstr = sprintf($LANG->fetch_language_file('EPARSE'), $l, $latexout);
+			return false;
+		}
+		
+		return $texfile . '.dvi';
+	}
+
+	/**
+	 * runs dvipng and creates a .png file from the .dvi file
+	 * in case or error, false is returned and errno and errstr are set
+	 * @param	string	$dvifile		path to the dvi file
+	 * @param	array	$bgcolor		background color RGB-array or false
+	 * @param	array	$fgcolor		foreground color RGB-array or false
+	 * @param	string	$outfile		optional output file
+	 * @return	string					path to the extracted png file or false on error
+	 * @global	$LANG					language object for the error messages
+	 */
+	function ltx_pngfile($dvifile, $bgcolor, $fgcolor, $outfile = FALSE)
+	{
+		global $LANG;
+		if ($outfile === FALSE)
+		{
+			$outfile = substr($dvifile, 0, strrpos($dvifile, '.') + 1) . 'png';
+		}
+		
+		if (!file_exists(dirname($outfile)))
+		{
+			// output directory does not exist, trying to create it
+			if (!@mkdir(dirname($outfile, 0777, true)))
+			{
+				$this->errno = TEXFY_ECREATODIR;
+				$this->errstr = sprintf($LANG->fetch_language_file('ECREATODIR'), dirname($outfile));
+				return false;
+			}
+		}
+		if ((file_exists($outfile) && !is_writable($outfile)) || !is_writable(dirname($outfile)))
+		{
+			$this->errno = TEXFY_EWRITODIR;
+			$this->errstr = sprintf($LANG->fetch_language_file('EWRITODIR'), $outfile);
+			return false;
+		}
+		
+		$exec = $this->settings['dvipng_path'] . ' ' . escapeshellarg($dvifile)
+			. ' -o ' . escapeshellarg($outfile)
+			. ' -bg ' . escapeshellarg(is_array($bgcolor) ? 'rgb ' . implode(' ', $bgcolor) : 'Transparent')
+			. ' -fg ' . escapeshellarg(is_array($fgcolor) ? 'rgb ' . implode(' ', $fgcolor) : 'rgb 0 0 0')
+			. ' -T tight -D 100';
+		exec($exec . ' >/dev/null 2>&1', $dvipngout, $d);
+		if ($d != 0)
+		{
+			$this->errno = TEXFY_EDVIPNG;
+			$this->errstr = sprintf($LANG->fetch_language_file('EDVIPNG'), $d, $dvipngout);
+			return false;
+		}
+		
+		return $outfile;
+	}
+
+	/**
+	 * cleans up the mess left by latex
+	 * @param	string	$texfile		path to the texfile - other paths are derived automatically
+	 * @return	bool					true if all files were cleaned, false if not
+	 */
+	function ltx_cleanup($texfile)
+	{
+		$success = TRUE;
+		$jobname = substr($texfile, 0, strrpos($texfile, '.') + 1);
+		$files = glob($jobname . '*', GLOB_NOSORT | GLOB_NOESCAPE);
+		$success &= ($files !== FALSE);
+		if ($files !== FALSE)
+		{
+			foreach ($files as $file)
+			{
+				if (!@unlink($file))
+				{
+					$success = FALSE;
+				}
+			}
+		}
+		return $success;
+	}
 }
+
 ?>
