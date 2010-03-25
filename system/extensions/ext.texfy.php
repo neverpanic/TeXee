@@ -367,8 +367,8 @@ class Texfy {
 
 					// save result to cache
 					$DB->query($DB->insert_string($this->cache_table(), array(
-						'key' => $md5,
-						'value' => $latex,
+						'key' => $DB->escape_str($md5),
+						'value' => $DB->escape_str($latex),
 						'created' => time()
 					)));
 				}
