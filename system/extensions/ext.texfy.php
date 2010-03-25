@@ -329,7 +329,7 @@ class Texfy {
 				$md5 = $this->cache_id($raw_code, $match['background'], $match['color'], $match['size'], $this->settings['img_tag']);
 				
 				// check wether we already have this one cached and generate it, if not
-				$results = $DB->query("SELECT COUNT(*) AS `count` FROM " . $this->cache_table() . " WHERE `key` = " . $DB->escape_str($md5));
+				$results = $DB->query("SELECT COUNT(*) AS `count` FROM " . $this->cache_table() . " WHERE `key` = '" . $DB->escape_str($md5) . "'");
 				if ($results->row['count'] == 0)
 				{
 					switch ($this->settings['method']) {
@@ -413,7 +413,7 @@ class Texfy {
 				if (strpos($str, $md5) !== FALSE)
 				{
 					// this marker is in the text, so replace it
-					$results = $DB->query("SELECT `value` FROM " . $this->cache_table() . " WHERE `key` = " . $DB->escape_str($md5));
+					$results = $DB->query("SELECT `value` FROM " . $this->cache_table() . " WHERE `key` = '" . $DB->escape_str($md5) . "'");
 					if ($results->num_rows > 0) {
 						$str = str_replace($md5, $results->row['value'], $str);
 					} else {
