@@ -306,6 +306,7 @@ class Texfy {
 			} else {
 				$pos[$match[1]]['size'] = self::sanitize_size($this->settings['default_size']);
 			}
+			
 		}
 
 		// clean variables used in the loop
@@ -491,7 +492,7 @@ class Texfy {
 			$color = $color{0} . $color{0} . $color{1} . $color{1} . $color{2} . $color{2};
 		}
 
-		$color = substr(preg_replace('/[0-9a-f]/i', '', $color), 0, 6);
+		$color = substr(preg_replace('/[^0-9a-f]/i', '', $color), 0, 6);
 		if (6 > $l = strlen($color))
 		{
 			$color .= str_repeat('0', 6 - $l);
