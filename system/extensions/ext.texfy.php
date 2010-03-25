@@ -366,11 +366,13 @@ class Texfy {
 					$latex = sprintf($this->settings['img_tag'], $url, $alt_text);
 
 					// save result to cache
-					$DB->query($DB->insert_string($this->cache_table(), array(
-						'key' => $DB->escape_str($md5),
-						'value' => $DB->escape_str($latex),
-						'created' => time()
-					)));
+					$DB->query(
+						"INSERT INTO " . $this->cache_table() . " (`key`, `value`, `created`) VALUES (
+							'" . $DB->escape_str($md5) . "',
+							'" . mysql_real_escape_string($latex) . "',
+							" . time() . "
+						)"
+					);
 				}
 				
 				// remember we added this one and need to replace it back later
