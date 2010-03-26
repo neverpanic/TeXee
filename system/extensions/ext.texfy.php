@@ -99,9 +99,11 @@ class Texfy {
 	 * @param	array	$settings	optional		Optional associative Array with options
 	 * @return	void
 	 * @access	public
+	 * @global	$LANG								language object to initialize language file
 	 */
 	function TeXfy($settings = '')
 	{
+		global $LANG;
 		$settings_default = array(
 			'ldelimiter' => '[',
 			'rdelimiter' => ']',
@@ -176,6 +178,8 @@ class Texfy {
 			)*' .
 			preg_quote($this->settings['rdelimiter'], '/') . '/ix'; // "ix" are the flags
 		$this->rlimit = $this->settings['ldelimiter'] . '/' . $this->settings['tag_name'] . $this->settings['rdelimiter'];
+		
+		$LANG->fetch_language_file('texfy');
 	}
 
 	/**
@@ -431,32 +435,38 @@ class Texfy {
 							$bgcolor = $this->ltx_hex2rgb($match['background']);
 							$fgcolor = $this->ltx_hex2rgb($match['color']);
 							
+							print(__LINE__ . "\n");
 							if ($texfile = $this->ltx_texfile($raw_code, $size))
 							{
+								print(__LINE__ . "\n");
 								if ($dvifile = $this->ltx_dvifile($texfile))
 								{
+									print(__LINE__ . "\n");
 									switch ($this->settings['method'])
 									{
 										case TEXFY_METHOD_DVIPNG:
+											print(__LINE__ . "\n");
 											$url = $this->ltx_pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
 											break;
 										case TEXFY_METHOD_DVIPS:
 											$this->errno = TEXFY_EINVRENDER;
-											$this->errstr = sprintf($LANG->fetch_language_file('EINVRENDER'), $this->settings['method']);
+											$this->errstr = sprintf($LANG->line('EINVRENDER'), $this->settings['method']);
 											break;
 									}
 								}
 							}
 							// clean up the mess
+							print(__LINE__ . "\n");
 							$this->ltx_cleanup($texfile);
 							break;
 						default:
 							$this->errno = TEXFY_EINVRENDER;
-							$this->errstr = sprintf($LANG->fetch_language_file('EINVRENDER'), $this->settings['method']);
+							$this->errstr = sprintf($LANG->line('EINVRENDER'), $this->settings['method']);
 							break;
 					}
 					if ($this->errno == 0)
 					{
+						print(__LINE__ . "\n");
 						// clean source for alt text
 						$alt_text = htmlspecialchars($raw_code, ENT_QUOTES);
 						if (strpos($alt_text, "\n") !== FALSE) {
@@ -471,9 +481,11 @@ class Texfy {
 					}
 					else
 					{
-						$latex = sprintf($LANG->fetch_language_file('errmsg'), $this->errno, $this->errstr);
+						print(__LINE__ . "\n");
+						$latex = sprintf($LANG->line('errmsg'), $this->errno, $this->errstr);
 					}
 					
+					print(__LINE__ . "\n");
 					// save result to cache
 					$DB->query(
 						"INSERT INTO " . $this->cache_table() . " (`key`, `value`, `created`) VALUES (
@@ -734,7 +746,7 @@ class Texfy {
 		if (strlen($raw_code) == 0)
 		{
 			$this->errno = TEXFY_ENOINPUT;
-			$this->errstr = $LANG->fetch_language_file('ENOINPUT');
+			$this->errstr = $LANG->line('ENOINPUT');
 			return false;
 		}
 		
@@ -744,7 +756,7 @@ class Texfy {
 			if (strpos($raw_code, $bad) !== FALSE)
 			{
 				$this->errno = TEXFY_EMALICIOUS;
-				$this->errstr = $LANG->fetch_language_file('EMALICIOUS');
+				$this->errstr = $LANG->line('EMALICIOUS');
 				return false;
 			}
 		}
@@ -753,7 +765,7 @@ class Texfy {
 		if (preg_match('/(?:^|[^\\\\])\$/', $raw_code))
 		{
 			$this->errno = TEXFY_EMATHMODE;
-			$this->errstr = $LANG->fetch_language_file('EMATHMODE');
+			$this->errstr = $LANG->line('EMATHMODE');
 			return false;
 		}
 		
@@ -761,7 +773,7 @@ class Texfy {
 		if (strlen($raw_code) > TEXFY_SOURCELIMIT)
 		{
 			$this->errno = TEXFY_ETOOLONG;
-			$this->errstr = $LANG->fetch_language_file('ETOOLONG');
+			$this->errstr = $LANG->line('ETOOLONG');
 			return false;
 		}
 		
@@ -769,7 +781,7 @@ class Texfy {
 		if (!$tmpfile = tempnam('/tmp', 'texfy_'))
 		{
 			$this->errno = TEXFY_ETMPFILE;
-			$this->errstr = $LANG->fetch_language_file('ETMPFILE');
+			$this->errstr = $LANG->line('ETMPFILE');
 			return false;
 		}
 		
@@ -777,7 +789,7 @@ class Texfy {
 		if (!$template = @file_get_contents(TEXFY_TEMPLATE))
 		{
 			$this->errno = TEXFY_ETPLFILE;
-			$this->errstr = $LANG->fetch_language_file('ETPLFILE');
+			$this->errstr = $LANG->line('ETPLFILE');
 			return false;
 		}
 		
@@ -812,7 +824,7 @@ class Texfy {
 		if (!@file_put_contents($tmpfile, $template, LOCK_EX))
 		{
 			$this->errno = TEXFY_ETEXWRITE;
-			$this->errstr = $LANG->fetch_language_file('ETEXWRITE');
+			$this->errstr = $LANG->line('ETEXWRITE');
 			return false;
 		}
 		
@@ -833,25 +845,31 @@ class Texfy {
 		$dir = dirname($texfile);
 		$job = basename($texfile);
 		
+		print(__LINE__ . "\n");
 		// make tex output the files to the same dir as the source file, regardless or working dir
 		putenv("TEXMFOUTPUT=" . $dir);
 		
+		print(__LINE__ . "\n");
 		// check whether this latex compiler supports --halt-on-error and --version
 		exec($this->settings['latex_path'] . ' --halt-on-error --version >/dev/null 2>&1', $latextest, $v);
 		$haltopt = $v ? '' : ' --halt-on-error';
 		
+		print(__LINE__ . "\n");
 		exec($this->settings['latex_path'] . ' --jobname foo --version </dev/null >/dev/null 2>&1', $latextest, $v);
 		$jobopt = $v ? '' : ' --jobname ' . escapeshellarg($job);
 		
+		print(__LINE__ . "\n");
 		$exec = "cd $dir && " . $this->settings['latex_path'] . $haltopt . $jobopt . ' --interaction nonstopmode ' . escapeshellarg($texfile);
 		exec($exec . ' >/dev/null 2>&1', $latexout, $l);
 		if ($l != 0)
 		{
+			print(__LINE__ . "\n");
 			$this->errno = TEXFY_EPARSE;
-			$this->errstr = sprintf($LANG->fetch_language_file('EPARSE'), $l, $latexout);
+			$this->errstr = sprintf($LANG->line('EPARSE'), $l, $latexout);
 			return false;
 		}
 		
+		print(__LINE__ . "\n");
 		return $texfile . '.dvi';
 	}
 
@@ -879,14 +897,14 @@ class Texfy {
 			if (!@mkdir(dirname($outfile, 0777, true)))
 			{
 				$this->errno = TEXFY_ECREATODIR;
-				$this->errstr = sprintf($LANG->fetch_language_file('ECREATODIR'), dirname($outfile));
+				$this->errstr = sprintf($LANG->line('ECREATODIR'), dirname($outfile));
 				return false;
 			}
 		}
 		if ((file_exists($outfile) && !is_writable($outfile)) || !is_writable(dirname($outfile)))
 		{
 			$this->errno = TEXFY_EWRITODIR;
-			$this->errstr = sprintf($LANG->fetch_language_file('EWRITODIR'), $outfile);
+			$this->errstr = sprintf($LANG->line('EWRITODIR'), $outfile);
 			return false;
 		}
 		
@@ -899,7 +917,7 @@ class Texfy {
 		if ($d != 0)
 		{
 			$this->errno = TEXFY_EDVIPNG;
-			$this->errstr = sprintf($LANG->fetch_language_file('EDVIPNG'), $d, $dvipngout);
+			$this->errstr = sprintf($LANG->line('EDVIPNG'), $d, $dvipngout);
 			return false;
 		}
 		
