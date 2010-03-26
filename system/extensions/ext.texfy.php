@@ -43,6 +43,7 @@ class Texfy {
 	var $rlimit = '';
 	var $errno = 0;
 	var $errstr = '';
+	var $settings_default = array();
 	var $blacklist = array(
 		'^^',
 		'afterassignment',
@@ -104,7 +105,7 @@ class Texfy {
 	function TeXfy($settings = '')
 	{
 		global $LANG;
-		$settings_default = array(
+		$this->settings_default = array(
 			'ldelimiter' => '[',
 			'rdelimiter' => ']',
 			'tag_name' => 'tex',
@@ -126,7 +127,7 @@ class Texfy {
 		{
 			$this->settings = $settings;
 		}
-		foreach ($settings_default as $key => $val)
+		foreach ($this->settings_default as $key => $val)
 		{
 			if (!isset($this->settings[$key]))
 			{
