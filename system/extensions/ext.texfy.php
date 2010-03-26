@@ -792,7 +792,12 @@ class Texfy {
 			$latex .= '\\begin{' . $size . '}';
 		}
 		
-		if (in_array($raw_code, array('\\LaTeX', '\\TeX', '\\AmS', '\\AmS-\\TeX', '\\AmS-\\LaTeX')))
+		if (   $raw_code == '\\LaTeX'
+			|| $raw_code == '\\TeX'
+			|| $raw_code == '\\AmS'
+			|| $raw_code == '\\AmS-\\TeX'
+			|| $raw_code == '\\AmS-\\LaTeX'
+		)
 		{
 			$latex .= $raw_code;
 		}
