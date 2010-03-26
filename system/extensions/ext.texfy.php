@@ -778,7 +778,7 @@ class Texfy {
 		}
 		
 		// read template
-		if (!$template = @file_get_contents(TEXFY_TEMPLATE))
+		if (($template = @file_get_contents(TEXFY_TEMPLATE)) === FALSE)
 		{
 			$this->errno = TEXFY_ETPLFILE;
 			$this->errstr = $LANG->line('ETPLFILE');
@@ -809,8 +809,8 @@ class Texfy {
 		}
 		
 		// put code in template...
-		$template = str_replace($template, '##ENCODING##', $this->settings['encoding']);
-		$template = str_replace($template, '##SOURCE##', $raw_code);
+		$template = str_replace('##ENCODING##', $this->settings['encoding'], $template);
+		$template = str_replace('##SOURCE##', $raw_code, $template);
 		
 		// ... and write it to the tempfile
 		if (!@file_put_contents($tmpfile, $template, LOCK_EX))
@@ -918,8 +918,7 @@ class Texfy {
 	function ltx_cleanup($texfile)
 	{
 		$success = TRUE;
-		$jobname = substr($texfile, 0, strrpos($texfile, '.') + 1);
-		$files = glob($jobname . '*', GLOB_NOSORT | GLOB_NOESCAPE);
+		$files = glob($texfile . '*', GLOB_NOSORT | GLOB_NOESCAPE);
 		$success &= ($files !== FALSE);
 		if ($files !== FALSE)
 		{
