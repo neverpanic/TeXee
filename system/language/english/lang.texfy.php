@@ -53,6 +53,15 @@ $L = array(
 "check_for_updates" =>
 "Check for updates at the author's web site",
 
+"latex_path" =>
+"Absolute path to the latex executable (required for any local method)",
+
+"dvipng_path" =>
+"Absolute path to the dvipng executable (required for PNG files via DVI only)",
+
+"outdir" =>
+"Path (with trailing slash) to the directory, where generated files will be stored",
+
 "size_tiny" =>
 "\\\\tiny",
 

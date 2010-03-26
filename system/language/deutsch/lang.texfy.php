@@ -53,6 +53,15 @@ $L = array(
 "check_for_updates" =>
 "Auf der Webseite des Autors nach Aktualisierungen suchen",
 
+"latex_path" =>
+"Absoluter Pfad zum latex-Binary (nur für lokale Render-Methoden erforderlich)",
+
+"dvipng_path" =>
+"Absoluter Pfad zum dvipng-Binary (nur für die Render-Methode PNG durch DVI erforderlich)",
+
+"outdir" =>
+"Pfad mit abschließendem Slash zum Verzeichnis, in dem generierte Dateien gespeichert werden sollen",
+
 "size_tiny" =>
 "\\\\tiny",
 
