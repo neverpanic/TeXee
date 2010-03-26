@@ -130,6 +130,13 @@ $L = array(
 
 'EDVIPNG' =>
 'Fehler beim Ausführen von dvipng: Rückgabewert %d, Ausgabe %s',
+
+'EDVIPS' =>
+'Fehler beim Ausführen von dvips: Rückgabewert %d, Ausgabe %s',
+
+'ECONVERT' =>
+'Fehler beim Ausführen von convert: Rückgabewert %d, Ausgabe %s',
+
 //----------------------------------------
 // END
 ''=>''

@@ -29,8 +29,8 @@ define('TEXFY_EPARSE'		, 201);
 define('TEXFY_ECREATODIR'	, 301);
 define('TEXFY_EWRITODIR'	, 302);
 define('TEXFY_EDVIPNG'		, 304);
-
-
+define('TEXFY_EDVIPS'		, 401);
+define('TEXFY_ECONVERT'		, 501);
 
 class Texfy {
 	var $name = 'TeXfy';
@@ -435,8 +435,6 @@ class Texfy {
 						case TEXFY_METHOD_DVIPNG:
 						case TEXFY_METHOD_DVIPS:
 							$size = $this->ltx_number2size($match['size']);
-							$bgcolor = $this->ltx_hex2rgb($match['background']);
-							$fgcolor = $this->ltx_hex2rgb($match['color']);
 							
 							if ($texfile = $this->ltx_texfile($raw_code, $size))
 							{
@@ -445,14 +443,18 @@ class Texfy {
 									switch ($this->settings['method'])
 									{
 										case TEXFY_METHOD_DVIPNG:
-											$this->ltx_pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
-											$url = $this->settings['outurl'] . $md5 . '.png';
+											$bgcolor = $this->ltx_hex2rgb($match['background']);
+											$fgcolor = $this->ltx_hex2rgb($match['color']);
+											$this->ltx_dvi2pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
 											break;
 										case TEXFY_METHOD_DVIPS:
-											$this->errno = TEXFY_EINVRENDER;
-											$this->errstr = sprintf($LANG->line('EINVRENDER'), $this->settings['method']);
+											if ($psfile = $this->ltx_psfile($dvifile))
+											{
+												$this->ltx_ps2pngfile($psfile, $match['background'], $match['color'], $this->settings['outdir'] . $md5 . '.png');
+											}
 											break;
 									}
+									$url = $this->settings['outurl'] . $md5 . '.png';
 								}
 							}
 							// clean up the mess
@@ -878,7 +880,7 @@ class Texfy {
 	 * @return	string					path to the extracted png file or false on error
 	 * @global	$LANG					language object for the error messages
 	 */
-	function ltx_pngfile($dvifile, $bgcolor, $fgcolor, $outfile = FALSE)
+	function ltx_dvi2pngfile($dvifile, $bgcolor, $fgcolor, $outfile = FALSE)
 	{
 		global $LANG;
 		if ($outfile === FALSE)
@@ -918,6 +920,120 @@ class Texfy {
 		
 		return $outfile;
 	}
+
+	/**
+	 * runs dvips and creates a .ps file from the .dvi file
+	 * in case or error, false is returned and errno and errstr are set
+	 * @param	string	$dvifile		path to the dvi file
+	 * @param	array	$bgcolor		background color RGB-array or false
+	 * @param	array	$fgcolor		foreground color RGB-array or false
+	 * @param	string	$outfile		optional output file
+	 * @return	string					path to the extracted png file or false on error
+	 * @global	$LANG					language object for the error messages
+	 */
+	function ltx_psfile($dvifile)
+	{
+		global $LANG;
+		$psfile = substr($dvifile, 0, strrpos($dvifile, '.') + 1) . 'ps';
+		$exec = $this->settings['dvips_path'] . ' -D 100' .
+			. ' -E ' . escapeshellarg($dvifile)
+			. ' -o ' . escapeshellarg($psfile)
+		exec($exec . ' >/dev/null 2>&1', $dvipsout, $d);
+		if ($d != 0)
+		{
+			$this->errno = TEXFY_EDVIPS;
+			$this->errstr = sprintf($LANG->line('EDVIPS'), $d, implode('<br />', $dvipsout));
+			return false;
+		}
+		
+		return $outfile;
+	}
+
+	/**
+	 * runs convert and creates a .png file from the .ps file
+	 * in case or error, false is returned and errno and errstr are set
+	 * @param	string	$psfile			path to the ps file
+	 * @param	array	$bgcolor		background color RGB-array or false
+	 * @param	array	$fgcolor		foreground color RGB-array or false
+	 * @param	string	$outfile		optional output file
+	 * @return	string					path to the extracted png file or false on error
+	 * @global	$LANG					language object for the error messages
+	 */
+	function ltx_dvi2pngfile($dvifile, $bgcolor, $fgcolor, $outfile = FALSE)
+	{
+		global $LANG;
+		if ($outfile === FALSE)
+		{
+			$outfile = substr($dvifile, 0, strrpos($dvifile, '.') + 1) . 'png';
+		}
+		
+		if (!file_exists(dirname($outfile)))
+		{
+			// output directory does not exist, trying to create it
+			if (!@mkdir(dirname($outfile, 0777, true)))
+			{
+				$this->errno = TEXFY_ECREATODIR;
+				$this->errstr = sprintf($LANG->line('ECREATODIR'), dirname($outfile));
+				return false;
+			}
+		}
+		if ((file_exists($outfile) && !is_writable($outfile)) || !is_writable(dirname($outfile)))
+		{
+			$this->errno = TEXFY_EWRITODIR;
+			$this->errstr = sprintf($LANG->line('EWRITODIR'), $outfile);
+			return false;
+		}
+
+		$exec = $this->settings['convert_path'] . ' -units PixelsPerInch -density 100';
+		if ($fgcolor == 'T')
+		{
+			$fgcolor = '000000';
+		}
+
+		if ($bgcolor == 'T')
+		{
+			$exec .= ' -flatten';
+		}
+		$exec .= ' ' . escapeshellarg($psfile);
+
+		if ($bgcolor == 'T' && $fgcolor != '000000')
+		{
+			// I have no idea, what this does, it's copied from Automattic's code
+			$exec .= ' -size 1x1 xc:#' . $fgcolor . ' -fx \'1-(1-v.p{0,0})*(1-u)\'';
+		}
+		else
+		{
+			if ($fgcolor == '000000' && $bgcolor == 'ffffff')
+			{
+				// do nothing
+			}
+			elseif ($fgcolor == '000000')
+			{
+				$exec .= ' -size 1x1 xc:#' . $bgcolor . ' -fx \'u*v.p{0,0}\'';
+			}
+			elseif ($bgcolor == 'ffffff')
+			{
+				$exec .= ' -size 1x1 xc:#' . $fgcolor . ' -fx \'1-(1-v.p{0,0})*(1-u)\'';
+			}
+			else
+			{
+				$exec .= ' -size 1x2 gradient:#' . $bgcolor . '-#' . $fgcolor . ' -fx \'v.p{0,0}*u+v.p{0,1}*(1-u)\'';
+			}
+		}
+
+		$exec .= ' ' . escapeshellarg($outfile);
+
+		exec($exec . ' >/dev/null 2>&1', $convertout, $c);
+		if ($c != 0)
+		{
+			$this->errno = TEXFY_ECONVERT;
+			$this->errstr = sprintf($LANG->line('ECONVERT'), $d, implode('<br />', $convertout));
+			return false;
+		}
+		
+		return $outfile;
+	}
+
 
 	/**
 	 * cleans up the mess left by latex
