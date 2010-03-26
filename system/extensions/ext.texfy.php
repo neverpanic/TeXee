@@ -435,17 +435,13 @@ class Texfy {
 							$bgcolor = $this->ltx_hex2rgb($match['background']);
 							$fgcolor = $this->ltx_hex2rgb($match['color']);
 							
-							print(__LINE__ . "\n");
 							if ($texfile = $this->ltx_texfile($raw_code, $size))
 							{
-								print(__LINE__ . "\n");
 								if ($dvifile = $this->ltx_dvifile($texfile))
 								{
-									print(__LINE__ . "\n");
 									switch ($this->settings['method'])
 									{
 										case TEXFY_METHOD_DVIPNG:
-											print(__LINE__ . "\n");
 											$url = $this->ltx_pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
 											break;
 										case TEXFY_METHOD_DVIPS:
@@ -456,7 +452,6 @@ class Texfy {
 								}
 							}
 							// clean up the mess
-							print(__LINE__ . "\n");
 							$this->ltx_cleanup($texfile);
 							break;
 						default:
@@ -466,7 +461,6 @@ class Texfy {
 					}
 					if ($this->errno == 0)
 					{
-						print(__LINE__ . "\n");
 						// clean source for alt text
 						$alt_text = htmlspecialchars($raw_code, ENT_QUOTES);
 						if (strpos($alt_text, "\n") !== FALSE) {
@@ -481,11 +475,9 @@ class Texfy {
 					}
 					else
 					{
-						print(__LINE__ . "\n");
 						$latex = sprintf($LANG->line('errmsg'), $this->errno, $this->errstr);
 					}
 					
-					print(__LINE__ . "\n");
 					// save result to cache
 					$DB->query(
 						"INSERT INTO " . $this->cache_table() . " (`key`, `value`, `created`) VALUES (
@@ -845,31 +837,25 @@ class Texfy {
 		$dir = dirname($texfile);
 		$job = basename($texfile);
 		
-		print(__LINE__ . "\n");
 		// make tex output the files to the same dir as the source file, regardless or working dir
 		putenv("TEXMFOUTPUT=" . $dir);
 		
-		print(__LINE__ . "\n");
 		// check whether this latex compiler supports --halt-on-error and --version
 		exec($this->settings['latex_path'] . ' --halt-on-error --version >/dev/null 2>&1', $latextest, $v);
 		$haltopt = $v ? '' : ' --halt-on-error';
 		
-		print(__LINE__ . "\n");
 		exec($this->settings['latex_path'] . ' --jobname foo --version </dev/null >/dev/null 2>&1', $latextest, $v);
 		$jobopt = $v ? '' : ' --jobname ' . escapeshellarg($job);
 		
-		print(__LINE__ . "\n");
 		$exec = "cd $dir && " . $this->settings['latex_path'] . $haltopt . $jobopt . ' --interaction nonstopmode ' . escapeshellarg($texfile);
 		exec($exec . ' >/dev/null 2>&1', $latexout, $l);
 		if ($l != 0)
 		{
-			print(__LINE__ . "\n");
 			$this->errno = TEXFY_EPARSE;
-			$this->errstr = sprintf($LANG->line('EPARSE'), $l, $latexout);
+			$this->errstr = sprintf($LANG->line('EPARSE'), $l, implode('<br />', $latexout));
 			return false;
 		}
 		
-		print(__LINE__ . "\n");
 		return $texfile . '.dvi';
 	}
 
@@ -917,7 +903,7 @@ class Texfy {
 		if ($d != 0)
 		{
 			$this->errno = TEXFY_EDVIPNG;
-			$this->errstr = sprintf($LANG->line('EDVIPNG'), $d, $dvipngout);
+			$this->errstr = sprintf($LANG->line('EDVIPNG'), $d, implode('<br />', $dvipngout));
 			return false;
 		}
 		
