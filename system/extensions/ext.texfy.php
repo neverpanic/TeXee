@@ -486,7 +486,7 @@ class Texfy {
 					$DB->query(
 						"INSERT INTO " . $this->cache_table() . " (`key`, `value`, `created`) VALUES (
 							'" . $DB->escape_str($md5) . "',
-							'" . mysql_real_escape_string($latex) . "',
+							'" . $DB->escape_str(addslashes($latex)) . "',
 							" . time() . "
 						)"
 					);
