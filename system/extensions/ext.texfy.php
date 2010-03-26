@@ -94,24 +94,6 @@ class Texfy {
 		'write'
 	);
 
-	// default values
-	var $settings_default = array(
-		'ldelimiter' => '[',
-		'rdelimiter' => ']',
-		'tag_name' => 'tex',
-		'cache_cutoff' => 86400,
-		'check_for_updates' => TRUE,
-		'encoding' => 'utf8',
-		'default_color' => '000000',
-		'default_background' => 'transparent',
-		'default_size' => 0,
-		'img_tag' => '<img class="latex" src="%s" alt="%s" />',
-		'method' => TEXFY_METHOD_WPCOM,
-		'latex_path' => '/usr/bin/latex',
-		'dvipng_path' => '/usr/bin/dvipng',
-		'outdir' => realpath(dirname(__FILE__) . '/../../images/') . 'texfy/',
-	);
-
 	/**
 	 * Constructor - accepts settings array
 	 * @param	array	$settings	optional		Optional associative Array with options
@@ -120,11 +102,28 @@ class Texfy {
 	 */
 	function TeXfy($settings = '')
 	{
+		$settings_default = array(
+			'ldelimiter' => '[',
+			'rdelimiter' => ']',
+			'tag_name' => 'tex',
+			'cache_cutoff' => 86400,
+			'check_for_updates' => TRUE,
+			'encoding' => 'utf8',
+			'default_color' => '000000',
+			'default_background' => 'transparent',
+			'default_size' => 0,
+			'img_tag' => '<img class="latex" src="%s" alt="%s" />',
+			'method' => TEXFY_METHOD_WPCOM,
+			'latex_path' => '/usr/bin/latex',
+			'dvipng_path' => '/usr/bin/dvipng',
+			'outdir' => realpath(dirname(__FILE__) . '/../../images/') . 'texfy/',
+		);
+		
 		if (!empty($settings))
 		{
 			$this->settings = $settings;
 		}
-		foreach ($this->settings_default as $key => $val)
+		foreach ($settings_default as $key => $val)
 		{
 			if (!isset($this->settings[$key]))
 			{
