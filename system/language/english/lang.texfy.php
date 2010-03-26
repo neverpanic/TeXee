@@ -63,7 +63,7 @@ $L = array(
 "Path (with trailing slash) to the directory, where generated files will be stored",
 
 "outurl" =>
-"URL to that directory (also with trailing slash)"
+"URL to that directory (also with trailing slash)",
 
 "size_tiny" =>
 "\\\\tiny",
