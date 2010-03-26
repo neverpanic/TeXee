@@ -815,7 +815,7 @@ class Texfy {
 		
 		// put code in template...
 		$template = str_replace('##ENCODING##', $this->settings['encoding'], $template);
-		$template = str_replace('##SOURCE##', $raw_code, $template);
+		$template = str_replace('##SOURCE##', $latex, $template);
 		
 		// ... and write it to the tempfile
 		if (!@file_put_contents($tmpfile, $template, LOCK_EX))
