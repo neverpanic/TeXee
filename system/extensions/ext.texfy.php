@@ -119,6 +119,7 @@ class Texfy {
 			'latex_path' => '/usr/bin/latex',
 			'dvipng_path' => '/usr/bin/dvipng',
 			'outdir' => realpath(dirname(__FILE__) . '/../../images/') . '/texfy/',
+			'outurl' => '/images/texfy/',
 		);
 		
 		if (!empty($settings))
@@ -234,6 +235,7 @@ class Texfy {
 		$settings['latex_path'] = '/usr/bin/latex';
 		$settings['dvipng_path'] = '/usr/bin/dvipng';
 		$settings['outdir'] = realpath(dirname(__FILE__) . '/../../images/') . '/texfy/';
+		$settings['outurl'] = '/images/texfy/';
 		return $settings;
 	}
 
@@ -442,7 +444,8 @@ class Texfy {
 									switch ($this->settings['method'])
 									{
 										case TEXFY_METHOD_DVIPNG:
-											$url = $this->ltx_pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
+											$this->ltx_pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
+											$url = $this->settings['outurl'] . $md5 . '.png';
 											break;
 										case TEXFY_METHOD_DVIPS:
 											$this->errno = TEXFY_EINVRENDER;

@@ -62,6 +62,9 @@ $L = array(
 "outdir" =>
 "Pfad mit abschließendem Slash zum Verzeichnis, in dem generierte Dateien gespeichert werden sollen",
 
+"outurl" =>
+"URL dieses Verzeichnisses (auch mit abschließendem Slash)",
+
 "size_tiny" =>
 "\\\\tiny",
 
