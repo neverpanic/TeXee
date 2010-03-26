@@ -838,13 +838,13 @@ class Texfy {
 		
 		// check whether this latex compiler supports --halt-on-error and --version
 		exec($this->settings['latex_path'] . ' --halt-on-error --version >/dev/null 2>&1', $latextest, $v);
-		$haltopt = $V ? '' : ' --halt-on-error';
+		$haltopt = $v ? '' : ' --halt-on-error';
 		
 		exec($this->settings['latex_path'] . ' --jobname foo --version </dev/null >/dev/null 2>&1', $latextest, $v);
 		$jobopt = $v ? '' : ' --jobname ' . escapeshellarg($job);
 		
 		$exec = "cd $dir && " . $this->settings['latex_path'] . $haltopt . $jobopt . ' --interaction nonstopmode ' . escapeshellarg($texfile);
-		exec($latex_exec . ' >/dev/null 2>&1', $latexout, $l);
+		exec($exec . ' >/dev/null 2>&1', $latexout, $l);
 		if ($l != 0)
 		{
 			$this->errno = TEXFY_EPARSE;
