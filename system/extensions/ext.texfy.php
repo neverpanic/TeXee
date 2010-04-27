@@ -119,6 +119,7 @@ class Texfy {
 			'method' => TEXFY_METHOD_WPCOM,
 			'latex_path' => '/usr/bin/latex',
 			'dvipng_path' => '/usr/bin/dvipng',
+			'dvips_path' => '/usr/bin/dvips'
 			'outdir' => realpath(dirname(__FILE__) . '/../../images/') . '/texfy/',
 			'outurl' => '/images/texfy/',
 		);
@@ -235,6 +236,7 @@ class Texfy {
 		);
 		$settings['latex_path'] = '/usr/bin/latex';
 		$settings['dvipng_path'] = '/usr/bin/dvipng';
+		$settings['dvips_path'] = '/usr/bin/dvips';
 		$settings['outdir'] = realpath(dirname(__FILE__) . '/../../images/') . '/texfy/';
 		$settings['outurl'] = '/images/texfy/';
 		return $settings;

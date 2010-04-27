@@ -30,7 +30,7 @@ $L = array(
 "PNG-Datei durch lokales DVI (LaTeX-Installation erforderlich)",
 
 "method_dvips" =>
-"PS?-Datei durch lokales DVI (LaTeX-Installation erforderlich)",
+"PNG-Datei durch lokales DVI und PS (LaTeX-Installation erforderlich)",
 
 "default_color" =>
 "Textfarbe, falls keine angegeben wurde",
