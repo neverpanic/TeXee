@@ -1,0 +1,15 @@
+h1. TeXee Readme
+
+p. TeXee is an extension for EllisLab's content management system "ExpressionEngine":http://expressionengine.com/ (in version 1.x). TeXee is a port of the WordPress LaTeX-Plugin ""WP LaTeX"":http://wordpress.org/extend/plugins/wp-latex/ allowing somebody to publish equations and formulae on websites by rendering them through LaTeX.
+
+h2. Installation
+
+p. To install TeXee, extract the archive into your Expression Engine directory and enable the extension form the Extension Manager in your control panel by going to Admin » Utilities » Extensions Manager and clicking "enable" in the table row for TeXee.
+
+h2. Updating
+
+p. Updating TeXee is just a matter of overwriting TeXee's source files. TeXee will automatically notice it's been updated the next time it's being used and take the necessary steps.
+
+h2. Reporting Bugs and Requesting Features
+
+p. If you want to report a bug or request a feature, you're welcome to do so. You can either mail me or use the "issue tracker on GitHub":http://github.com/neverpanic/TeXee/issues.
