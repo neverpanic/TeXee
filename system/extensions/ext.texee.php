@@ -1,43 +1,43 @@
 <?php
 /**
- * @package	TeXfy
+ * @package	TeXee
  * @author	Clemens Lang <neverpanic@gmail.com>
- * @link	http://geshify.com/texfy/
+ * @link	http://geshify.com/texee/
  * @license	GPL
  */
 
-define('TEXFY_VERSION', '0.1');
+define('TEXEE_VERSION', '0.1');
 
 // constants
-define('TEXFY_METHOD_WPCOM', 1);
-define('TEXFY_METHOD_DVIPNG', 2);
-define('TEXFY_METHOD_DVIPS', 3);
+define('TEXEE_METHOD_WPCOM', 1);
+define('TEXEE_METHOD_DVIPNG', 2);
+define('TEXEE_METHOD_DVIPS', 3);
 
 // static parameters
-define('TEXFY_TEMPLATE', dirname(__FILE__) . '/ext.texfy.template.tex');
-define('TEXFY_SOURCELIMIT', 2000);
+define('TEXEE_TEMPLATE', dirname(__FILE__) . '/ext.texee.template.tex');
+define('TEXEE_SOURCELIMIT', 2000);
 
 // error numbers
-define('TEXFY_EINVRENDER'	,   1);
-define('TEXFY_ENOINPUT'		, 101);
-define('TEXFY_EMALICIOUS'	, 102);
-define('TEXFY_EMATHMODE'	, 103);
-define('TEXFY_ETOOLONG'		, 104);
-define('TEXFY_ETMPFILE'		, 105);
-define('TEXFY_ETPLFILE'		, 106);
-define('TEXFY_ETEXWRITE'	, 107);
-define('TEXFY_EPARSE'		, 201);
-define('TEXFY_ECREATODIR'	, 301);
-define('TEXFY_EWRITODIR'	, 302);
-define('TEXFY_EDVIPNG'		, 304);
-define('TEXFY_EDVIPS'		, 401);
-define('TEXFY_ECONVERT'		, 501);
+define('TEXEE_EINVRENDER'	,   1);
+define('TEXEE_ENOINPUT'		, 101);
+define('TEXEE_EMALICIOUS'	, 102);
+define('TEXEE_EMATHMODE'	, 103);
+define('TEXEE_ETOOLONG'		, 104);
+define('TEXEE_ETMPFILE'		, 105);
+define('TEXEE_ETPLFILE'		, 106);
+define('TEXEE_ETEXWRITE'	, 107);
+define('TEXEE_EPARSE'		, 201);
+define('TEXEE_ECREATODIR'	, 301);
+define('TEXEE_EWRITODIR'	, 302);
+define('TEXEE_EDVIPNG'		, 304);
+define('TEXEE_EDVIPS'		, 401);
+define('TEXEE_ECONVERT'		, 501);
 
-class Texfy {
-	var $name = 'TeXfy';
-	var $version = TEXFY_VERSION;
+class Texee {
+	var $name = 'TeXee';
+	var $version = TEXEE_VERSION;
 	var $description = 'Generates images from LaTeX markup in your posts.';
-	var $docs_url = 'http://geshify.com/texfy/docs';
+	var $docs_url = 'http://geshify.com/texee/docs';
 	var $settings = array();
 	var $settings_exist = 'y';
 	var $llimit = '';
@@ -103,7 +103,7 @@ class Texfy {
 	 * @access	public
 	 * @global	$LANG								language object to initialize language file
 	 */
-	function TeXfy($settings = '')
+	function TeXee($settings = '')
 	{
 		global $LANG;
 		$this->settings_default = array(
@@ -117,12 +117,12 @@ class Texfy {
 			'default_background' => 'transparent',
 			'default_size' => 0,
 			'img_tag' => '<img class="latex" src="%s" alt="%s" />',
-			'method' => TEXFY_METHOD_WPCOM,
+			'method' => TEXEE_METHOD_WPCOM,
 			'latex_path' => '/usr/bin/latex',
 			'dvipng_path' => '/usr/bin/dvipng',
 			'dvips_path' => '/usr/bin/dvips'
-			'outdir' => realpath(dirname(__FILE__) . '/../../images/') . '/texfy/',
-			'outurl' => '/images/texfy/',
+			'outdir' => realpath(dirname(__FILE__) . '/../../images/') . '/texee/',
+			'outurl' => '/images/texee/',
 		);
 		
 		if (!empty($settings))
@@ -183,7 +183,7 @@ class Texfy {
 			preg_quote($this->settings['rdelimiter'], '/') . '/ix'; // "ix" are the flags
 		$this->rlimit = $this->settings['ldelimiter'] . '/' . $this->settings['tag_name'] . $this->settings['rdelimiter'];
 		
-		$LANG->fetch_language_file('texfy');
+		$LANG->fetch_language_file('texee');
 	}
 
 	/**
@@ -229,17 +229,17 @@ class Texfy {
 		$settings['method'] = array(
 			's',
 			array(
-				TEXFY_METHOD_WPCOM => 'method_wpcom',
-				TEXFY_METHOD_DVIPNG => 'method_dvipng',
-				TEXFY_METHOD_DVIPS => 'method_dvips'
+				TEXEE_METHOD_WPCOM => 'method_wpcom',
+				TEXEE_METHOD_DVIPNG => 'method_dvipng',
+				TEXEE_METHOD_DVIPS => 'method_dvips'
 			),
-			TEXFY_METHOD_WPCOM
+			TEXEE_METHOD_WPCOM
 		);
 		$settings['latex_path'] = '/usr/bin/latex';
 		$settings['dvipng_path'] = '/usr/bin/dvipng';
 		$settings['dvips_path'] = '/usr/bin/dvips';
-		$settings['outdir'] = realpath(dirname(__FILE__) . '/../../images/') . '/texfy/';
-		$settings['outurl'] = '/images/texfy/';
+		$settings['outdir'] = realpath(dirname(__FILE__) . '/../../images/') . '/texee/';
+		$settings['outurl'] = '/images/texee/';
 		return $settings;
 	}
 
@@ -255,7 +255,7 @@ class Texfy {
 		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
-				'class' => 'TeXfy',
+				'class' => 'TeXee',
 				'method' => 'pre_typography',
 				'hook' => 'typography_parse_type_start',
 				'settings' => serialize($this->settings_default),
@@ -267,7 +267,7 @@ class Texfy {
 		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
-				'class' => 'TeXfy',
+				'class' => 'TeXee',
 				'method' => 'post_typography',
 				'hook' => 'typography_parse_type_end',
 				'settings' => serialize($this->settings_default),
@@ -279,7 +279,7 @@ class Texfy {
 		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
-				'class' => 'TeXfy',
+				'class' => 'TeXee',
 				'method' => 'addon_check_register_source',
 				'hook' => 'lg_addon_update_register_source',
 				'settings' => '',
@@ -291,7 +291,7 @@ class Texfy {
 		$DB->query($DB->insert_string($PREFS->ini('db_prefix') . '_extensions',
 			array(
 				'extension_id' => '',
-				'class' => 'TeXfy',
+				'class' => 'TeXee',
 				'method' => 'addon_check_register_addon',
 				'hook' => 'lg_addon_update_register_addon',
 				'settings' => '',
@@ -325,7 +325,7 @@ class Texfy {
 		$DB->query("TRUNCATE TABLE " . $this->cache_table());
 		// set the version in the DB to current
 		$DB->query("UPDATE " . $PREFS->ini('db_prefix') . "_extensions SET version = '" .
-			$DB->escape_str($this->version) . "' WHERE class = 'TeXfy'");
+			$DB->escape_str($this->version) . "' WHERE class = 'TeXee'");
 	}
 
 	/**
@@ -337,7 +337,7 @@ class Texfy {
 	function disable_extension()
 	{
 		global $DB, $PREFS;
-		$DB->query("DELETE FROM " . $PREFS->ini('db_prefix') . "_extensions WHERE class = 'TeXfy'");
+		$DB->query("DELETE FROM " . $PREFS->ini('db_prefix') . "_extensions WHERE class = 'TeXee'");
 		$DB->query("DROP TABLE " . $this->cache_table());
 	}
 
@@ -426,7 +426,7 @@ class Texfy {
 					$this->errstr = '';
 					
 					switch ($this->settings['method']) {
-						case TEXFY_METHOD_WPCOM:
+						case TEXEE_METHOD_WPCOM:
 							$url = sprintf(
 								'http://s.wordpress.com/latex.php?latex=%s&bg=%s&fg=%s&s=%s',
 								rawurlencode($raw_code),
@@ -435,8 +435,8 @@ class Texfy {
 								$match['size']
 							);
 							break;
-						case TEXFY_METHOD_DVIPNG:
-						case TEXFY_METHOD_DVIPS:
+						case TEXEE_METHOD_DVIPNG:
+						case TEXEE_METHOD_DVIPS:
 							$size = $this->ltx_number2size($match['size']);
 							
 							if ($texfile = $this->ltx_texfile($raw_code, $size))
@@ -445,12 +445,12 @@ class Texfy {
 								{
 									switch ($this->settings['method'])
 									{
-										case TEXFY_METHOD_DVIPNG:
+										case TEXEE_METHOD_DVIPNG:
 											$bgcolor = $this->ltx_hex2rgb($match['background']);
 											$fgcolor = $this->ltx_hex2rgb($match['color']);
 											$this->ltx_dvi2pngfile($dvifile, $bgcolor, $fgcolor, $this->settings['outdir'] . $md5 . '.png');
 											break;
-										case TEXFY_METHOD_DVIPS:
+										case TEXEE_METHOD_DVIPS:
 											if ($psfile = $this->ltx_psfile($dvifile))
 											{
 												$this->ltx_ps2pngfile($psfile, $match['background'], $match['color'], $this->settings['outdir'] . $md5 . '.png');
@@ -464,7 +464,7 @@ class Texfy {
 							$this->ltx_cleanup($texfile);
 							break;
 						default:
-							$this->errno = TEXFY_EINVRENDER;
+							$this->errno = TEXEE_EINVRENDER;
 							$this->errstr = sprintf($LANG->line('EINVRENDER'), $this->settings['method']);
 							break;
 					}
@@ -498,11 +498,11 @@ class Texfy {
 				}
 				
 				// remember we added this one and need to replace it back later
-				if (!isset($_SESSION['cache']['ext.texfy']))
+				if (!isset($_SESSION['cache']['ext.texee']))
 				{
-					$_SESSION['cache']['ext.texfy'] = array();
+					$_SESSION['cache']['ext.texee'] = array();
 				}
-				$_SESSION['cache']['ext.texfy'][] = $md5;
+				$_SESSION['cache']['ext.texee'][] = $md5;
 				$str = substr($str, 0, $code_pos) . $md5 . substr($str, $code_end_pos + $rllen);
 			}
 			// unset used variables, so we don't get messed up
@@ -530,10 +530,10 @@ class Texfy {
 			// A different extension has run before us
 			$str = $EXT->last_call;
 		}
-		if (isset($_SESSION['cache']['ext.texfy']))
+		if (isset($_SESSION['cache']['ext.texee']))
 		{
 			// replace idents with values from the cache - this way we passed the code around the usual typography stuff
-			foreach ($_SESSION['cache']['ext.texfy'] as $key => $md5)
+			foreach ($_SESSION['cache']['ext.texee'] as $key => $md5)
 			{
 				if (strpos($str, $md5) !== FALSE)
 				{
@@ -545,7 +545,7 @@ class Texfy {
 						// TODO: handle cache errors
 					}
 					// remove this from cache to speed up other processing
-					unset($_SESSION['cache']['ext.texfy'][$key]);
+					unset($_SESSION['cache']['ext.texee'][$key]);
 				}
 			}
 			return $str;
@@ -591,7 +591,7 @@ class Texfy {
 		// register the current version with the LG Addon Updater
 		if ($this->settings['check_for_updates'])
 		{
-			$addons['TeXfy'] = $this->version;
+			$addons['TeXee'] = $this->version;
 		}
 		return $addons;
 	}
@@ -746,7 +746,7 @@ class Texfy {
 		// check whether we have input at all
 		if (strlen($raw_code) == 0)
 		{
-			$this->errno = TEXFY_ENOINPUT;
+			$this->errno = TEXEE_ENOINPUT;
 			$this->errstr = $LANG->line('ENOINPUT');
 			return false;
 		}
@@ -756,7 +756,7 @@ class Texfy {
 		{
 			if (strpos($raw_code, $bad) !== FALSE)
 			{
-				$this->errno = TEXFY_EMALICIOUS;
+				$this->errno = TEXEE_EMALICIOUS;
 				$this->errstr = $LANG->line('EMALICIOUS');
 				return false;
 			}
@@ -765,31 +765,31 @@ class Texfy {
 		// force math mode
 		if (preg_match('/(?:^|[^\\\\])\$/', $raw_code))
 		{
-			$this->errno = TEXFY_EMATHMODE;
+			$this->errno = TEXEE_EMATHMODE;
 			$this->errstr = $LANG->line('EMATHMODE');
 			return false;
 		}
 		
 		// force upper limit
-		if (strlen($raw_code) > TEXFY_SOURCELIMIT)
+		if (strlen($raw_code) > TEXEE_SOURCELIMIT)
 		{
-			$this->errno = TEXFY_ETOOLONG;
+			$this->errno = TEXEE_ETOOLONG;
 			$this->errstr = $LANG->line('ETOOLONG');
 			return false;
 		}
 		
 		// try to create a temporary file
-		if (!$tmpfile = tempnam('/tmp', 'texfy_'))
+		if (!$tmpfile = tempnam('/tmp', 'texee_'))
 		{
-			$this->errno = TEXFY_ETMPFILE;
+			$this->errno = TEXEE_ETMPFILE;
 			$this->errstr = $LANG->line('ETMPFILE');
 			return false;
 		}
 		
 		// read template
-		if (($template = @file_get_contents(TEXFY_TEMPLATE)) === FALSE)
+		if (($template = @file_get_contents(TEXEE_TEMPLATE)) === FALSE)
 		{
-			$this->errno = TEXFY_ETPLFILE;
+			$this->errno = TEXEE_ETPLFILE;
 			$this->errstr = $LANG->line('ETPLFILE');
 			return false;
 		}
@@ -829,7 +829,7 @@ class Texfy {
 		// ... and write it to the tempfile
 		if (!@file_put_contents($tmpfile, $template, LOCK_EX))
 		{
-			$this->errno = TEXFY_ETEXWRITE;
+			$this->errno = TEXEE_ETEXWRITE;
 			$this->errstr = $LANG->line('ETEXWRITE');
 			return false;
 		}
@@ -865,7 +865,7 @@ class Texfy {
 		exec($exec . ' >/dev/null 2>&1', $latexout, $l);
 		if ($l != 0)
 		{
-			$this->errno = TEXFY_EPARSE;
+			$this->errno = TEXEE_EPARSE;
 			$this->errstr = sprintf($LANG->line('EPARSE'), $l, implode('<br />', $latexout));
 			return false;
 		}
@@ -896,14 +896,14 @@ class Texfy {
 			// output directory does not exist, trying to create it
 			if (!@mkdir(dirname($outfile, 0777, true)))
 			{
-				$this->errno = TEXFY_ECREATODIR;
+				$this->errno = TEXEE_ECREATODIR;
 				$this->errstr = sprintf($LANG->line('ECREATODIR'), dirname($outfile));
 				return false;
 			}
 		}
 		if ((file_exists($outfile) && !is_writable($outfile)) || !is_writable(dirname($outfile)))
 		{
-			$this->errno = TEXFY_EWRITODIR;
+			$this->errno = TEXEE_EWRITODIR;
 			$this->errstr = sprintf($LANG->line('EWRITODIR'), $outfile);
 			return false;
 		}
@@ -916,7 +916,7 @@ class Texfy {
 		exec($exec . ' >/dev/null 2>&1', $dvipngout, $d);
 		if ($d != 0)
 		{
-			$this->errno = TEXFY_EDVIPNG;
+			$this->errno = TEXEE_EDVIPNG;
 			$this->errstr = sprintf($LANG->line('EDVIPNG'), $d, implode('<br />', $dvipngout));
 			return false;
 		}
@@ -944,7 +944,7 @@ class Texfy {
 		exec($exec . ' >/dev/null 2>&1', $dvipsout, $d);
 		if ($d != 0)
 		{
-			$this->errno = TEXFY_EDVIPS;
+			$this->errno = TEXEE_EDVIPS;
 			$this->errstr = sprintf($LANG->line('EDVIPS'), $d, implode('<br />', $dvipsout));
 			return false;
 		}
@@ -975,14 +975,14 @@ class Texfy {
 			// output directory does not exist, trying to create it
 			if (!@mkdir(dirname($outfile, 0777, true)))
 			{
-				$this->errno = TEXFY_ECREATODIR;
+				$this->errno = TEXEE_ECREATODIR;
 				$this->errstr = sprintf($LANG->line('ECREATODIR'), dirname($outfile));
 				return false;
 			}
 		}
 		if ((file_exists($outfile) && !is_writable($outfile)) || !is_writable(dirname($outfile)))
 		{
-			$this->errno = TEXFY_EWRITODIR;
+			$this->errno = TEXEE_EWRITODIR;
 			$this->errstr = sprintf($LANG->line('EWRITODIR'), $outfile);
 			return false;
 		}
@@ -1029,7 +1029,7 @@ class Texfy {
 		exec($exec . ' >/dev/null 2>&1', $convertout, $c);
 		if ($c != 0)
 		{
-			$this->errno = TEXFY_ECONVERT;
+			$this->errno = TEXEE_ECONVERT;
 			$this->errstr = sprintf($LANG->line('ECONVERT'), $d, implode('<br />', $convertout));
 			return false;
 		}

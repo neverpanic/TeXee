@@ -6,13 +6,13 @@ $L = array(
 // Required for extension settings page
 //----------------------------------------
 "ldelimiter" =>
-"Linker Begrenzer für TeXfy-Block",
+"Linker Begrenzer für TeXee-Block",
 
 "rdelimiter" =>
-"Rechter Begrenzer für TeXfy-Block",
+"Rechter Begrenzer für TeXee-Block",
 
 "tag_name" =>
-"Name des TeXfy-Tags",
+"Name des TeXee-Tags",
 
 "cache_cutoff" =>
 "maximale Cachedauer in Sekunden",

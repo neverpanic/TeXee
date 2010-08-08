@@ -1,4 +1,4 @@
-TeXfy Changelog
+TeXee Changelog
 ---------------
 
 This software is based on the GeSHify extension. More info on GeSHify can be
