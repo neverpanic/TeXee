@@ -4,26 +4,11 @@ TeXfy Changelog
 This software is based on the GeSHify extension. More info on GeSHify can be
 found at http://geshify.com/
 
-[[ version numbering scheme ]]
-	Version numbers for TeXfy will be composed of the GeSHify version
-	number this TeXfy release is based on followed by a dash, the word
-	texfy and a texfy version number. Valid version numbers (in order of
-	release) would e.g. be:
-	0.3.8-texfy0
-	0.3.8.5-texfy0
-	0.3.9-texfy0
-	0.3.9-texfy1
-	0.3.9-texfy2
-
 [[ known bugs ]]
 	» none
 	Please report any bugs you encounter or your feature wish list to
 	clemens@neverpanic.de. Thank you.
 
-[[ 0.3.9.1 :: 20.12.2009 ]]
-	» fixed some notices (empty() vs. != '')
-	» changes to the internal packaging process
-
-[[ 0.3.9-texfy0 :: 12.08.2009 ]]
+[[ 0.1 :: 12.08.2009 ]]
 	» inital branch from the GeSHify project
 

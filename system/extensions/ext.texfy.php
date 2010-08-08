@@ -3,9 +3,10 @@
  * @package	TeXfy
  * @author	Clemens Lang <neverpanic@gmail.com>
  * @link	http://geshify.com/texfy/
- * @version	##VERSION##
  * @license	GPL
  */
+
+define('TEXFY_VERSION', '0.1');
 
 // constants
 define('TEXFY_METHOD_WPCOM', 1);
@@ -34,7 +35,7 @@ define('TEXFY_ECONVERT'		, 501);
 
 class Texfy {
 	var $name = 'TeXfy';
-	var $version = '##VERSION##';
+	var $version = TEXFY_VERSION;
 	var $description = 'Generates images from LaTeX markup in your posts.';
 	var $docs_url = 'http://geshify.com/texfy/docs';
 	var $settings = array();
